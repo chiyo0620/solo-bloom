@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solo Bloom - ゆとり費アプリ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ivory: '#FDFBF7',
+            sage: '#9CAF88',
+            sageLight: '#C3D0B4',
+            textMain: '#4A4A4A',
+            ticketBg: '#F4F1EA'
+          }
+        }
+      }
+    }
+  </style>
+  <style>
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .water-fill {
+      background: linear-gradient(180deg, #C3D0B4 0%, #9CAF88 100%);
+      transition: height 0.3s ease;
+    }
+    
+    .ticket-card {
+      position: relative;
+      background: #F4F1EA;
+      border: 1px solid #E5E0D8;
+    }
+    .ticket-card::before, .ticket-card::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 16px; height: 16px;
+      background-color: #FDFBF7;
+      border-radius: 50%;
+      transform: translateY(-50%);
+      border: 1px solid #E5E0D8;
+    }
+    .ticket-card::before { left: -9px; border-right-color: transparent; border-bottom-color: transparent; transform: translateY(-50%) rotate(-45deg); }
+    .ticket-card::after { right: -9px; border-left-color: transparent; border-top-color: transparent; transform: translateY(-50%) rotate(-45deg); }
+  </style>
+</head>
+<body class="bg-gray-100 flex justify-center min-h-screen text-textMain font-sans">
+
+  <div class="bg-ivory w-full max-w-md h-screen relative shadow-xl overflow-hidden flex flex-col">
+    
+    <!-- ヘッダー -->
+    <header class="pt-8 pb-3 px-6 bg-ivory z-10 border-b border-gray-200">
+      <h1 class="text-2xl font-serif text-sage tracking-widest text-center">Solo Bloom</h1>
+      
+      <!-- ゆとり費（年間予算）設定パネル -->
+      <div class="mt-3 bg-white p-3 rounded-lg border border-sageLight/50 flex items-center justify-between shadow-sm">
+        <div>
+          <p class="text-[10px] text-gray-500 font-bold">今年のゆとり費 (インフレ連動)</p>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span class="text-sm">¥</span>
+            <input type="number" id="annual-budget" value="1560000" class="text-lg font-bold text-sage w-28 bg-transparent border-b border-dashed border-gray-300 focus:outline-none focus:border-sage">
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-[10px] text-gray-500">月額換算</p>
+          <p class="text-sm font-bold text-gray-700" id="monthly-budget">¥130,000</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ領域 -->
+    <main class="flex-1 overflow-y-auto pb-24 scroll-smooth">
+      
+      <!-- ① Plan タブ -->
+      <div id="tab-plan" class="tab-content block p-6">
+        
+        <div class="mb-8">
+          <div class="flex justify-between items-end mb-2">
+            <h2 class="font-bold text-lg">12連アクア・シリンダー</h2>
+          </div>
+          
+          <!-- シリンダーUI (横スクロール) -->
+          <div class="overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2">
+            <div class="flex items-end h-32 bg-white p-3 rounded-xl shadow-inner relative min-w-[600px]" id="cylinder-container">
+              <div class="absolute bottom-3 left-3 right-3 h-2 bg-sageLight/30 rounded-full"></div>
+              <!-- JavaScriptで12ヶ月分を描画します -->
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-end mb-3">
+          <h2 class="font-bold text-lg">ウィッシュボード</h2>
+          <button class="text-xs text-sage font-bold px-2 py-1 bg-sage/10 rounded">＋ 追加</button>
+        </div>
+        
+        <div class="space-y-3" id="wish-list">
+          <!-- モックアップ用カード -->
+          <div class="ticket-card rounded-lg flex shadow-sm">
+            <div class="w-12 bg-sage text-white rounded-l-lg flex flex-col items-center justify-center border-r border-dashed border-white/50">
+              <span class="text-xl">🚄</span>
+            </div>
+            <div class="p-3 flex-1">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-sm">青森・錦石拾いの旅</h3>
+                <span class="text-sage font-bold text-sm">¥85,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② Spend タブ (仮) -->
+      <div id="tab-spend" class="tab-content hidden p-6">
+        <h2 class="font-bold text-lg mb-4">Spend - 味わう -</h2>
+        <p class="text-sm text-gray-500">※第2フェーズ以降で実装します</p>
+      </div>
+
+      <!-- ③ Stock タブ (仮) -->
+      <div id="tab-stock" class="tab-content hidden p-6">
+        <h2 class="font-bold text-lg mb-4">Stock - 豊かな余韻 -</h2>
+        <p class="text-sm text-gray-500">※第2フェーズ以降で実装します</p>
+      </div>
+
+    </main>
+
+    <!-- ボトムナビゲーション -->
+    <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex justify-around pb-6 pt-3 px-2 z-20">
+      <button onclick="switchTab('plan')" id="nav-plan" class="nav-btn flex flex-col items-center text-sage w-1/3">
+        <span class="text-xl mb-1">🪴</span>
+        <span class="text-[10px] font-bold">Plan - 企てる -</span>
+      </button>
+      <button onclick="switchTab('spend')" id="nav-spend" class="nav-btn flex flex-col items-center text-gray-400 w-1/3">
+        <span class="text-xl mb-1">☕️</span>
+        <span class="text-[10px] font-bold">Spend - 味わう -</span>
+      </button>
+      <button onclick="switchTab('stock')" id="nav-stock" class="nav-btn flex flex-col items-center text-gray-400 w-1/3">
+        <span class="text-xl mb-1">📚</span>
+        <span class="text-[10px] font-bold">Stock - 豊かな余韻 -</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    // --- 1. タブ切り替えロジック ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabId).classList.remove('hidden');
+      document.querySelectorAll('.nav-btn').forEach(el => {
+        el.classList.remove('text-sage'); el.classList.add('text-gray-400');
+      });
+      document.getElementById('nav-' + tabId).classList.remove('text-gray-400');
+      document.getElementById('nav-' + tabId).classList.add('text-sage');
+    }
+
+    // --- 2. 予算変更ロジック ---
+    const budgetInput = document.getElementById('annual-budget');
+    const monthlyDisplay = document.getElementById('monthly-budget');
+
+    budgetInput.addEventListener('input', (e) => {
+      const annual = parseInt(e.target.value) || 0;
+      const monthly = Math.floor(annual / 12);
+      monthlyDisplay.textContent = `¥${monthly.toLocaleString()}`;
+      // ※第2フェーズで、ここでシリンダーの水量を再計算する処理を入れます
+    });
+
+    // --- 3. 12ヶ月シリンダーの自動生成（HTMLをスッキリさせるためJSで描画） ---
+    const cylinderContainer = document.getElementById('cylinder-container');
+    let cylindersHTML = '';
+    for(let i = 1; i <= 12; i++) {
+      // 初期状態は仮で100%（一部減らすなどの視覚テスト用ランダム値を入れてもOK）
+      const height = 100; 
+      cylindersHTML += `
+        <div class="flex flex-col items-center z-10 w-full px-1">
+          <div class="relative w-6 h-20 bg-gray-100 rounded-t-sm rounded-b-xl overflow-hidden shadow-inner">
+            <div class="water-fill absolute bottom-0 w-full rounded-b-xl" style="height: ${height}%;"></div>
+          </div>
+          <span class="text-[9px] mt-1 font-bold text-gray-400">${i}月</span>
+        </div>
+      `;
+    }
+    // 底のパイプ（absolute）を残しつつシリンダーを追加
+    cylinderContainer.innerHTML = '<div class="absolute bottom-3 left-3 right-3 h-2 bg-sageLight/30 rounded-full"></div>' + 
+                                  '<div class="flex justify-between w-full z-10 px-1">' + cylindersHTML + '</div>';
+
+  </script>
+</body>
+</html>
