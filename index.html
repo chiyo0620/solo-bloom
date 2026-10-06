@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solo Bloom - ゆとり費アプリ</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- カスタムカラーの設定（scriptタグに修正） -->
   <script>
     tailwind.config = {
       theme: {
@@ -55,27 +54,25 @@
     
     <!-- ヘッダー -->
     <header class="pt-8 pb-3 px-6 bg-ivory z-10 border-b border-gray-200 shrink-0">
-      <div class="relative flex items-center justify-center">
+      <div class="flex items-center justify-center">
         <div>
           <h1 class="text-2xl font-serif text-sage tracking-widest text-center">Solo Bloom</h1>
           <p class="text-[10px] text-center text-gray-400 tracking-wider mt-0.5">人生の豊かさをストックする</p>
         </div>
-        <!-- 設定ボタン（歯車アイコン） -->
-        <button onclick="openSettingsModal()" class="absolute right-0 p-2 text-gray-400 hover:text-sage transition-colors" title="年間ゆとり費の設定">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </button>
       </div>
 
-      <!-- 控えめなステータスバッジ -->
+      <!-- 控えめなステータスバッジ（変更ボタンを歯車アイコンに変更） -->
       <div class="mt-3 flex items-center justify-between text-[11px] px-3 py-1.5 bg-white/70 border border-sageLight/40 rounded-full text-gray-600">
         <span class="flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-sage"></span>
           <span>ゆとり枠：<strong id="badge-monthly-budget" class="text-sage font-bold">¥130,000</strong> / 月</span>
         </span>
-        <button onclick="openSettingsModal()" class="text-gray-400 hover:text-sage text-[10px] underline">変更</button>
+        <button onclick="openSettingsModal()" class="text-gray-400 hover:text-sage transition-colors ml-2" title="年間ゆとり費の設定">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -90,7 +87,6 @@
             <h2 class="font-bold text-lg">12連アクア・シリンダー</h2>
           </div>
           
-          <!-- シリンダーUI (横スクロール) -->
           <div class="overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2">
             <div class="flex items-end h-32 bg-white p-3 rounded-xl shadow-inner relative min-w-[600px]" id="cylinder-container">
               <div class="absolute bottom-3 left-3 right-3 h-2 bg-sageLight/30 rounded-full"></div>
@@ -100,21 +96,12 @@
 
         <div class="flex justify-between items-end mb-3">
           <h2 class="font-bold text-lg">ウィッシュボード</h2>
-          <button class="text-xs text-sage font-bold px-2 py-1 bg-sage/10 rounded">＋ 追加</button>
+          <button onclick="openWishModal()" class="text-xs text-sage font-bold px-2 py-1 bg-sage/10 rounded hover:bg-sage/20 transition-colors">＋ 追加</button>
         </div>
         
+        <!-- ウィッシュリスト表示領域 -->
         <div class="space-y-3" id="wish-list">
-          <div class="ticket-card rounded-lg flex shadow-sm">
-            <div class="w-12 bg-sage text-white rounded-l-lg flex flex-col items-center justify-center border-r border-dashed border-white/50">
-              <span class="text-xl">🚄</span>
-            </div>
-            <div class="p-3 flex-1">
-              <div class="flex justify-between items-center">
-                <h3 class="font-bold text-sm">青森・錦石拾いの旅</h3>
-                <span class="text-sage font-bold text-sm">¥85,000</span>
-              </div>
-            </div>
-          </div>
+          <!-- JavaScriptで動的にカードが生成されます -->
         </div>
       </div>
 
@@ -129,7 +116,6 @@
         <h2 class="font-bold text-lg mb-4">Stock - 豊かな余韻 -</h2>
         <p class="text-sm text-gray-500">※順次実装予定です</p>
       </div>
-
     </main>
 
     <!-- ボトムナビゲーション -->
@@ -148,18 +134,13 @@
       </button>
     </nav>
 
-    <!-- 年間ゆとり費 設定モーダル -->
+    <!-- 1. 年間ゆとり費 設定モーダル -->
     <div id="settings-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-base text-gray-800">年間のゆとり費設定</h3>
           <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
         </div>
-        
-        <p class="text-xs text-gray-500 mb-4 leading-relaxed">
-          インフレ調整やライフプランの変化に合わせて、今年の年間予算を設定します。
-        </p>
-
         <div class="space-y-4">
           <div>
             <label class="block text-[11px] font-bold text-gray-600 mb-1">年間予算（円）</label>
@@ -168,16 +149,54 @@
               <input type="number" id="modal-annual-budget" class="w-full bg-white border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-base font-bold text-sage focus:outline-none focus:border-sage" step="10000">
             </div>
           </div>
-
           <div class="bg-white/80 p-3 rounded-lg border border-gray-200">
             <span class="text-[10px] text-gray-500 block">月あたりのゆとり枠（目安）</span>
             <span id="modal-monthly-preview" class="text-base font-bold text-gray-700">¥130,000</span>
           </div>
         </div>
+        <div class="mt-6 flex gap-2">
+          <button onclick="closeSettingsModal()" class="w-1/2 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">キャンセル</button>
+          <button onclick="saveAnnualBudget()" class="w-1/2 py-2 text-xs font-bold text-white bg-sage rounded-lg hover:bg-sageLight shadow">保存する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. ウィッシュ登録モーダル -->
+    <div id="wish-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+      <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-base text-gray-800">新しいウィッシュを企てる</h3>
+          <button onclick="closeWishModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-600 mb-1">体験・アイテム名</label>
+            <input type="text" id="wish-title" placeholder="例：青森・錦石拾いの旅" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-sage">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-600 mb-1">見込み費用（円）</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2 text-gray-400 text-sm">¥</span>
+              <input type="number" id="wish-cost" placeholder="85000" class="w-full bg-white border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-sage" step="1000">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-600 mb-1">アイコン</label>
+            <select id="wish-icon" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:border-sage">
+              <option value="🚄">🚄 鉄道旅・新幹線</option>
+              <option value="💎">💎 石拾い・鉱物</option>
+              <option value="♨️">♨️ 温泉・宿泊</option>
+              <option value="💆‍♀️">💆‍♀️ スパ・エステ</option>
+              <option value="🍽️">🍽️ 美味しいもの</option>
+              <option value="🛍️">🛍️ その他・お買い物</option>
+            </select>
+          </div>
+        </div>
 
         <div class="mt-6 flex gap-2">
-          <button onclick="closeSettingsModal()" class="w-1/2 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">キャンセル</button>
-          <button onclick="saveAnnualBudget()" class="w-1/2 py-2 text-xs font-bold text-white bg-sage rounded-lg hover:bg-sageLight transition-colors shadow">保存する</button>
+          <button onclick="closeWishModal()" class="w-1/2 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">キャンセル</button>
+          <button onclick="saveWish()" class="w-1/2 py-2 text-xs font-bold text-white bg-sage rounded-lg hover:bg-sageLight shadow">リストに追加</button>
         </div>
       </div>
     </div>
@@ -185,111 +204,155 @@
   </div>
 
   <script>
-    // --- 1. 定数・初期化（エラー回避処理を追加） ---
-    const STORAGE_KEY = 'solobloom_annual_budget';
-    const DEFAULT_ANNUAL_BUDGET = 1560000; 
-
-    let currentAnnualBudget = DEFAULT_ANNUAL_BUDGET;
-
-    // ローカル環境等でlocalStorageがブロックされた場合でもアプリが動くように保護
+    // --- 1. 予算設定系の処理 ---
+    const STORAGE_KEY_BUDGET = 'solobloom_annual_budget';
+    let currentAnnualBudget = 1560000; 
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        currentAnnualBudget = parseInt(saved) || DEFAULT_ANNUAL_BUDGET;
-      }
-    } catch (e) {
-      console.warn('localStorageが使用できない環境です。初期設定を適用します。');
-    }
+      const saved = localStorage.getItem(STORAGE_KEY_BUDGET);
+      if (saved) currentAnnualBudget = parseInt(saved) || 1560000;
+    } catch (e) {}
 
     function updateBudgetUI() {
       const monthly = Math.floor(currentAnnualBudget / 12);
       const badgeEl = document.getElementById('badge-monthly-budget');
-      if (badgeEl) {
-        badgeEl.textContent = `¥${monthly.toLocaleString()}`;
-      }
+      if (badgeEl) badgeEl.textContent = `¥${monthly.toLocaleString()}`;
     }
 
-    // --- 2. 設定モーダルの開閉・保存 ---
-    const modal = document.getElementById('settings-modal');
-    const modalInput = document.getElementById('modal-annual-budget');
-    const modalMonthlyPreview = document.getElementById('modal-monthly-preview');
-
+    const modalSettings = document.getElementById('settings-modal');
     function openSettingsModal() {
-      if(modal) {
-        modalInput.value = currentAnnualBudget;
-        updateModalPreview(currentAnnualBudget);
-        modal.classList.remove('hidden');
-      }
+      document.getElementById('modal-annual-budget').value = currentAnnualBudget;
+      document.getElementById('modal-monthly-preview').textContent = `¥${Math.floor(currentAnnualBudget / 12).toLocaleString()}`;
+      modalSettings.classList.remove('hidden');
     }
-
-    function closeSettingsModal() {
-      if(modal) modal.classList.add('hidden');
-    }
-
-    if(modalInput) {
-      modalInput.addEventListener('input', (e) => {
-        const val = parseInt(e.target.value) || 0;
-        updateModalPreview(val);
-      });
-    }
-
-    function updateModalPreview(annualVal) {
-      const monthly = Math.floor(annualVal / 12);
-      if(modalMonthlyPreview) {
-        modalMonthlyPreview.textContent = `¥${monthly.toLocaleString()}`;
-      }
-    }
-
+    function closeSettingsModal() { modalSettings.classList.add('hidden'); }
     function saveAnnualBudget() {
-      const val = parseInt(modalInput.value) || 0;
+      const val = parseInt(document.getElementById('modal-annual-budget').value) || 0;
       if (val > 0) {
         currentAnnualBudget = val;
-        try {
-          localStorage.setItem(STORAGE_KEY, currentAnnualBudget);
-        } catch (e) {
-          console.warn('設定の保存がブロックされました');
-        }
+        try { localStorage.setItem(STORAGE_KEY_BUDGET, currentAnnualBudget); } catch (e) {}
         updateBudgetUI();
         closeSettingsModal();
       }
     }
+    document.getElementById('modal-annual-budget').addEventListener('input', (e) => {
+      document.getElementById('modal-monthly-preview').textContent = `¥${Math.floor((parseInt(e.target.value)||0) / 12).toLocaleString()}`;
+    });
 
-    // --- 3. タブ切り替えロジック ---
+
+    // --- 2. ウィッシュリスト系の処理 ---
+    const STORAGE_KEY_WISHES = 'solobloom_wishes';
+    let wishes = [];
+    
+    // サンプルデータ（初回のみ）
+    const initialWishes = [
+      { id: Date.now(), title: '青森・錦石拾いの旅', cost: 85000, icon: '🚄' }
+    ];
+
+    try {
+      const savedWishes = localStorage.getItem(STORAGE_KEY_WISHES);
+      wishes = savedWishes ? JSON.parse(savedWishes) : initialWishes;
+    } catch (e) {
+      wishes = initialWishes;
+    }
+
+    // ウィッシュを描画する関数
+    function renderWishes() {
+      const listContainer = document.getElementById('wish-list');
+      listContainer.innerHTML = ''; // リセット
+      
+      if (wishes.length === 0) {
+        listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">まだウィッシュがありません。<br>「＋ 追加」から企ててみましょう。</p>';
+        return;
+      }
+
+      wishes.forEach(wish => {
+        const cardHTML = `
+          <div class="ticket-card rounded-lg flex shadow-sm">
+            <div class="w-12 bg-sage text-white rounded-l-lg flex flex-col items-center justify-center border-r border-dashed border-white/50">
+              <span class="text-xl">${wish.icon}</span>
+            </div>
+            <div class="p-3 flex-1 relative">
+              <button onclick="deleteWish(${wish.id})" class="absolute top-2 right-2 text-gray-300 hover:text-red-400 text-sm leading-none p-1" title="削除">✕</button>
+              <div class="pr-6">
+                <h3 class="font-bold text-sm text-gray-800">${wish.title}</h3>
+                <p class="text-sage font-bold text-sm mt-1">¥${wish.cost.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        `;
+        listContainer.insertAdjacentHTML('beforeend', cardHTML);
+      });
+    }
+
+    // ウィッシュモーダルの開閉・保存
+    const modalWish = document.getElementById('wish-modal');
+    function openWishModal() {
+      document.getElementById('wish-title').value = '';
+      document.getElementById('wish-cost').value = '';
+      modalWish.classList.remove('hidden');
+    }
+    function closeWishModal() { modalWish.classList.add('hidden'); }
+
+    function saveWish() {
+      const title = document.getElementById('wish-title').value.trim();
+      const cost = parseInt(document.getElementById('wish-cost').value) || 0;
+      const icon = document.getElementById('wish-icon').value;
+
+      if (!title || cost <= 0) {
+        alert('タイトルと費用（1円以上）を入力してください。');
+        return;
+      }
+
+      const newWish = { id: Date.now(), title, cost, icon };
+      wishes.push(newWish);
+      saveWishesToStorage();
+      renderWishes();
+      closeWishModal();
+    }
+
+    // ウィッシュの削除
+    function deleteWish(id) {
+      if (confirm('このウィッシュを削除しますか？')) {
+        wishes = wishes.filter(w => w.id !== id);
+        saveWishesToStorage();
+        renderWishes();
+      }
+    }
+
+    function saveWishesToStorage() {
+      try { localStorage.setItem(STORAGE_KEY_WISHES, JSON.stringify(wishes)); } catch (e) {}
+    }
+
+
+    // --- 3. タブとシリンダー ---
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      const targetTab = document.getElementById('tab-' + tabId);
-      if(targetTab) targetTab.classList.remove('hidden');
-
+      document.getElementById('tab-' + tabId).classList.remove('hidden');
       document.querySelectorAll('.nav-btn').forEach(el => {
         el.classList.remove('text-sage'); el.classList.add('text-gray-400');
       });
-      const activeNav = document.getElementById('nav-' + tabId);
-      if(activeNav) {
-        activeNav.classList.remove('text-gray-400');
-        activeNav.classList.add('text-sage');
-      }
+      document.getElementById('nav-' + tabId).classList.remove('text-gray-400');
+      document.getElementById('nav-' + tabId).classList.add('text-sage');
     }
 
-    // --- 4. 12ヶ月シリンダーの生成 ---
     const cylinderContainer = document.getElementById('cylinder-container');
-    if (cylinderContainer) {
-      let cylindersHTML = '';
-      for(let i = 1; i <= 12; i++) {
-        cylindersHTML += `
-          <div class="flex flex-col items-center z-10 w-full px-1">
-            <div class="relative w-6 h-20 bg-gray-100 rounded-t-sm rounded-b-xl overflow-hidden shadow-inner">
-              <div class="water-fill absolute bottom-0 w-full rounded-b-xl" style="height: 100%;"></div>
-            </div>
-            <span class="text-[9px] mt-1 font-bold text-gray-400">${i}月</span>
+    let cylindersHTML = '';
+    for(let i = 1; i <= 12; i++) {
+      cylindersHTML += `
+        <div class="flex flex-col items-center z-10 w-full px-1">
+          <div class="relative w-6 h-20 bg-gray-100 rounded-t-sm rounded-b-xl overflow-hidden shadow-inner">
+            <div class="water-fill absolute bottom-0 w-full rounded-b-xl" style="height: 100%;"></div>
           </div>
-        `;
-      }
-      cylinderContainer.innerHTML = '<div class="absolute bottom-3 left-3 right-3 h-2 bg-sageLight/30 rounded-full"></div>' + 
-                                    '<div class="flex justify-between w-full z-10 px-1">' + cylindersHTML + '</div>';
+          <span class="text-[9px] mt-1 font-bold text-gray-400">${i}月</span>
+        </div>
+      `;
     }
+    cylinderContainer.innerHTML = '<div class="absolute bottom-3 left-3 right-3 h-2 bg-sageLight/30 rounded-full"></div>' + 
+                                  '<div class="flex justify-between w-full z-10 px-1">' + cylindersHTML + '</div>';
 
-    // 画面ロード時にUI更新
+    // 初期化実行
     updateBudgetUI();
+    renderWishes();
   </script>
 </body>
 </html>
