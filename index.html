@@ -26,7 +26,7 @@
     
     .water-fill {
       background: linear-gradient(180deg, #C3D0B4 0%, #9CAF88 100%);
-      transition: height 0.3s ease;
+      transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .ticket-card {
@@ -60,8 +60,6 @@
           <p class="text-[10px] text-center text-gray-400 tracking-wider mt-0.5">人生の豊かさをストックする</p>
         </div>
       </div>
-
-      <!-- 控えめなステータスバッジ（変更ボタンを歯車アイコンに変更） -->
       <div class="mt-3 flex items-center justify-between text-[11px] px-3 py-1.5 bg-white/70 border border-sageLight/40 rounded-full text-gray-600">
         <span class="flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-sage"></span>
@@ -85,23 +83,25 @@
         <div class="mb-8">
           <div class="flex justify-between items-end mb-2">
             <h2 class="font-bold text-lg">12連アクア・シリンダー</h2>
+            <span id="annual-harmony-status" class="text-[10px] font-bold"></span>
           </div>
+          <p class="text-[10px] text-gray-500 mb-3 leading-tight">カードに月を割り当てると予定額分の水が使われます。<br>予算を超えても、隣の月から水が自動で補填（前借り）されます。</p>
           
           <div class="overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2">
             <div class="flex items-end h-32 bg-white p-3 rounded-xl shadow-inner relative min-w-[600px]" id="cylinder-container">
-              <div class="absolute bottom-3 left-3 right-3 h-2 bg-sageLight/30 rounded-full"></div>
+              <!-- シリンダーはJSで自動生成されます -->
             </div>
           </div>
         </div>
 
         <div class="flex justify-between items-end mb-3">
           <h2 class="font-bold text-lg">ウィッシュボード</h2>
-          <button onclick="openWishModal()" class="text-xs text-sage font-bold px-2 py-1 bg-sage/10 rounded hover:bg-sage/20 transition-colors">＋ 追加</button>
+          <button onclick="openWishModal()" class="text-xs text-sage font-bold px-2 py-1 bg-sage/10 rounded hover:bg-sage/20 transition-colors shadow-sm">＋ 追加</button>
         </div>
         
         <!-- ウィッシュリスト表示領域 -->
         <div class="space-y-3" id="wish-list">
-          <!-- JavaScriptで動的にカードが生成されます -->
+          <!-- JavaScriptで動的に生成 -->
         </div>
       </div>
 
@@ -134,7 +134,7 @@
       </button>
     </nav>
 
-    <!-- 1. 年間ゆとり費 設定モーダル -->
+    <!-- 年間ゆとり費 設定モーダル -->
     <div id="settings-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -161,7 +161,7 @@
       </div>
     </div>
 
-    <!-- 2. ウィッシュ登録モーダル -->
+    <!-- ウィッシュ登録モーダル -->
     <div id="wish-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -174,11 +174,23 @@
             <label class="block text-[11px] font-bold text-gray-600 mb-1">体験・アイテム名</label>
             <input type="text" id="wish-title" placeholder="例：青森・錦石拾いの旅" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-sage">
           </div>
-          <div>
-            <label class="block text-[11px] font-bold text-gray-600 mb-1">見込み費用（円）</label>
-            <div class="relative">
-              <span class="absolute left-3 top-2 text-gray-400 text-sm">¥</span>
-              <input type="number" id="wish-cost" placeholder="85000" class="w-full bg-white border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-sage" step="1000">
+          <div class="flex gap-2">
+            <div class="flex-1">
+              <label class="block text-[11px] font-bold text-gray-600 mb-1">見込み費用（円）</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2 text-gray-400 text-sm">¥</span>
+                <input type="number" id="wish-cost" placeholder="85000" class="w-full bg-white border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-sage" step="1000">
+              </div>
+            </div>
+            <div class="w-24">
+              <label class="block text-[11px] font-bold text-gray-600 mb-1">予定月</label>
+              <select id="wish-month" class="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:border-sage text-center">
+                <option value="">未定</option>
+                <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+                <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+                <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+                <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+              </select>
             </div>
           </div>
           <div>
@@ -189,6 +201,7 @@
               <option value="♨️">♨️ 温泉・宿泊</option>
               <option value="💆‍♀️">💆‍♀️ スパ・エステ</option>
               <option value="🍽️">🍽️ 美味しいもの</option>
+              <option value="🌿">🌿 植物・ガーデニング</option>
               <option value="🛍️">🛍️ その他・お買い物</option>
             </select>
           </div>
@@ -204,20 +217,192 @@
   </div>
 
   <script>
-    // --- 1. 予算設定系の処理 ---
+    // --- 1. 状態・初期化 ---
     const STORAGE_KEY_BUDGET = 'solobloom_annual_budget';
+    const STORAGE_KEY_WISHES = 'solobloom_wishes';
+    
     let currentAnnualBudget = 1560000; 
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_BUDGET);
-      if (saved) currentAnnualBudget = parseInt(saved) || 1560000;
-    } catch (e) {}
+    let wishes = [];
 
-    function updateBudgetUI() {
-      const monthly = Math.floor(currentAnnualBudget / 12);
-      const badgeEl = document.getElementById('badge-monthly-budget');
-      if (badgeEl) badgeEl.textContent = `¥${monthly.toLocaleString()}`;
+    // サンプルデータ（青森・讃岐・北海道・沖縄のコンセプトに合わせて初期配置）
+    const initialWishes = [
+      { id: 1, title: '青森・錦石拾いの旅', cost: 85000, icon: '🚄', month: '9' },
+      { id: 2, title: '極上ヘッドスパ（ご褒美）', cost: 18000, icon: '💆‍♀️', month: '2' },
+      { id: 3, title: '讃岐サヌカイトと温泉旅', cost: 65000, icon: '♨️', month: '4' },
+      { id: 4, title: '北海道・ペリドット採取', cost: 150000, icon: '💎', month: '' } // 月未定
+    ];
+
+    try {
+      const savedBudget = localStorage.getItem(STORAGE_KEY_BUDGET);
+      if (savedBudget) currentAnnualBudget = parseInt(savedBudget) || 1560000;
+
+      const savedWishes = localStorage.getItem(STORAGE_KEY_WISHES);
+      wishes = savedWishes ? JSON.parse(savedWishes) : initialWishes;
+    } catch (e) {
+      wishes = initialWishes;
     }
 
+    // --- 2. データ保存 ---
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY_BUDGET, currentAnnualBudget);
+        localStorage.setItem(STORAGE_KEY_WISHES, JSON.stringify(wishes));
+      } catch (e) {
+        console.warn('保存エラー');
+      }
+      updateUI();
+    }
+
+    // --- 3. UI全体の更新 ---
+    function updateUI() {
+      // 予算バッジ
+      const monthlyBudget = Math.floor(currentAnnualBudget / 12);
+      document.getElementById('badge-monthly-budget').textContent = `¥${monthlyBudget.toLocaleString()}`;
+      
+      renderWishes();
+      renderCylindersAndHarmony();
+    }
+
+    // --- 4. シリンダーと調和（計算）の描画 ---
+    function renderCylindersAndHarmony() {
+      const monthlyBudget = currentAnnualBudget / 12;
+      const cylinderContainer = document.getElementById('cylinder-container');
+      let cylindersHTML = '';
+      let annualTotalCost = 0;
+
+      for (let i = 1; i <= 12; i++) {
+        // その月に割り当てられたウィッシュの合計額を計算
+        const monthWishes = wishes.filter(w => parseInt(w.month) === i);
+        const monthCost = monthWishes.reduce((sum, w) => sum + w.cost, 0);
+        annualTotalCost += monthCost;
+
+        // 水位の計算（予算残高の割合）。マイナスにならないようMax 0
+        const remainingRatio = Math.max(0, ((monthlyBudget - monthCost) / monthlyBudget) * 100);
+        
+        // 予算超過（前借り）判定
+        const isOver = monthCost > monthlyBudget;
+
+        // 超過している場合は、シリンダーの背景色を少し濃くして「前借り」を表現
+        const containerStyle = isOver ? 'bg-sageLight/30 border border-sage/50 shadow-inner' : 'bg-gray-100 shadow-inner';
+        const labelStyle = isOver ? 'text-sage font-extrabold' : 'text-gray-400 font-bold';
+
+        cylindersHTML += `
+          <div class="flex flex-col items-center z-10 w-full px-1">
+            <div class="relative w-6 h-20 ${containerStyle} rounded-t-sm rounded-b-xl overflow-hidden transition-colors duration-300">
+              <div class="water-fill absolute bottom-0 w-full rounded-b-xl" style="height: ${remainingRatio}%;"></div>
+            </div>
+            <span class="text-[9px] mt-1 ${labelStyle}">${i}月</span>
+          </div>
+        `;
+      }
+      
+      // 底の連通管とシリンダーを結合
+      cylinderContainer.innerHTML = '<div class="absolute bottom-3 left-3 right-3 h-2 bg-sageLight/30 rounded-full"></div>' + 
+                                    '<div class="flex justify-between w-full z-10 px-1">' + cylindersHTML + '</div>';
+
+      // 年間調和のステータス更新
+      const harmonyStatus = document.getElementById('annual-harmony-status');
+      if (annualTotalCost <= currentAnnualBudget) {
+        const remaining = currentAnnualBudget - annualTotalCost;
+        harmonyStatus.innerHTML = `年間調和: <span class="text-sage">安定 (残 ¥${remaining.toLocaleString()})</span>`;
+      } else {
+        const over = annualTotalCost - currentAnnualBudget;
+        harmonyStatus.innerHTML = `年間調和: <span class="text-red-400">超過 (¥${over.toLocaleString()} 前借り中)</span>`;
+      }
+    }
+
+    // --- 5. ウィッシュカードの描画 ---
+    function renderWishes() {
+      const listContainer = document.getElementById('wish-list');
+      listContainer.innerHTML = ''; 
+      
+      if (wishes.length === 0) {
+        listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">まだウィッシュがありません。<br>「＋ 追加」から企ててみましょう。</p>';
+        return;
+      }
+
+      // 月のセレクトオプションを生成する関数
+      const generateMonthOptions = (selectedMonth) => {
+        let options = `<option value="">未定</option>`;
+        for(let m=1; m<=12; m++) {
+          const isSelected = selectedMonth == m ? 'selected' : '';
+          options += `<option value="${m}" ${isSelected}>${m}月に企てる</option>`;
+        }
+        return options;
+      };
+
+      wishes.forEach(wish => {
+        // 予定月が入っていると少しハイライトする
+        const monthBg = wish.month ? 'bg-sage/10 text-sage border-sage/30' : 'bg-transparent text-gray-400 border-transparent';
+
+        const cardHTML = `
+          <div class="ticket-card rounded-lg flex shadow-sm">
+            <div class="w-12 bg-sage text-white rounded-l-lg flex flex-col items-center justify-center border-r border-dashed border-white/50">
+              <span class="text-xl">${wish.icon}</span>
+            </div>
+            <div class="p-3 flex-1 relative">
+              <button onclick="deleteWish(${wish.id})" class="absolute top-2 right-2 text-gray-300 hover:text-red-400 text-sm leading-none p-1" title="削除">✕</button>
+              <div class="pr-6">
+                <div class="flex justify-between items-start">
+                  <h3 class="font-bold text-sm text-gray-800 leading-tight">${wish.title}</h3>
+                  <p class="text-sage font-bold text-sm ml-2">¥${wish.cost.toLocaleString()}</p>
+                </div>
+                <!-- カード上で予定月を変更できるセレクトボックス -->
+                <div class="mt-2 inline-block">
+                  <select onchange="updateWishMonth(${wish.id}, this.value)" class="text-[10px] font-bold ${monthBg} border rounded px-1 py-0.5 focus:outline-none cursor-pointer transition-colors">
+                    ${generateMonthOptions(wish.month)}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        listContainer.insertAdjacentHTML('beforeend', cardHTML);
+      });
+    }
+
+    function updateWishMonth(id, newMonth) {
+      const wishIndex = wishes.findIndex(w => w.id === id);
+      if (wishIndex !== -1) {
+        wishes[wishIndex].month = newMonth;
+        saveData(); // 保存＆UI自動更新
+      }
+    }
+
+    // --- 6. モーダル操作 ---
+    // ウィッシュ追加
+    const modalWish = document.getElementById('wish-modal');
+    function openWishModal() {
+      document.getElementById('wish-title').value = '';
+      document.getElementById('wish-cost').value = '';
+      document.getElementById('wish-month').value = '';
+      modalWish.classList.remove('hidden');
+    }
+    function closeWishModal() { modalWish.classList.add('hidden'); }
+
+    function saveWish() {
+      const title = document.getElementById('wish-title').value.trim();
+      const cost = parseInt(document.getElementById('wish-cost').value) || 0;
+      const month = document.getElementById('wish-month').value;
+      const icon = document.getElementById('wish-icon').value;
+
+      if (!title || cost <= 0) {
+        alert('タイトルと費用（1円以上）を入力してください。');
+        return;
+      }
+      wishes.push({ id: Date.now(), title, cost, month, icon });
+      saveData();
+      closeWishModal();
+    }
+
+    function deleteWish(id) {
+      if (confirm('このウィッシュを削除しますか？')) {
+        wishes = wishes.filter(w => w.id !== id);
+        saveData();
+      }
+    }
+
+    // 予算設定
     const modalSettings = document.getElementById('settings-modal');
     function openSettingsModal() {
       document.getElementById('modal-annual-budget').value = currentAnnualBudget;
@@ -229,8 +414,7 @@
       const val = parseInt(document.getElementById('modal-annual-budget').value) || 0;
       if (val > 0) {
         currentAnnualBudget = val;
-        try { localStorage.setItem(STORAGE_KEY_BUDGET, currentAnnualBudget); } catch (e) {}
-        updateBudgetUI();
+        saveData();
         closeSettingsModal();
       }
     }
@@ -238,93 +422,7 @@
       document.getElementById('modal-monthly-preview').textContent = `¥${Math.floor((parseInt(e.target.value)||0) / 12).toLocaleString()}`;
     });
 
-
-    // --- 2. ウィッシュリスト系の処理 ---
-    const STORAGE_KEY_WISHES = 'solobloom_wishes';
-    let wishes = [];
-    
-    // サンプルデータ（初回のみ）
-    const initialWishes = [
-      { id: Date.now(), title: '青森・錦石拾いの旅', cost: 85000, icon: '🚄' }
-    ];
-
-    try {
-      const savedWishes = localStorage.getItem(STORAGE_KEY_WISHES);
-      wishes = savedWishes ? JSON.parse(savedWishes) : initialWishes;
-    } catch (e) {
-      wishes = initialWishes;
-    }
-
-    // ウィッシュを描画する関数
-    function renderWishes() {
-      const listContainer = document.getElementById('wish-list');
-      listContainer.innerHTML = ''; // リセット
-      
-      if (wishes.length === 0) {
-        listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">まだウィッシュがありません。<br>「＋ 追加」から企ててみましょう。</p>';
-        return;
-      }
-
-      wishes.forEach(wish => {
-        const cardHTML = `
-          <div class="ticket-card rounded-lg flex shadow-sm">
-            <div class="w-12 bg-sage text-white rounded-l-lg flex flex-col items-center justify-center border-r border-dashed border-white/50">
-              <span class="text-xl">${wish.icon}</span>
-            </div>
-            <div class="p-3 flex-1 relative">
-              <button onclick="deleteWish(${wish.id})" class="absolute top-2 right-2 text-gray-300 hover:text-red-400 text-sm leading-none p-1" title="削除">✕</button>
-              <div class="pr-6">
-                <h3 class="font-bold text-sm text-gray-800">${wish.title}</h3>
-                <p class="text-sage font-bold text-sm mt-1">¥${wish.cost.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        `;
-        listContainer.insertAdjacentHTML('beforeend', cardHTML);
-      });
-    }
-
-    // ウィッシュモーダルの開閉・保存
-    const modalWish = document.getElementById('wish-modal');
-    function openWishModal() {
-      document.getElementById('wish-title').value = '';
-      document.getElementById('wish-cost').value = '';
-      modalWish.classList.remove('hidden');
-    }
-    function closeWishModal() { modalWish.classList.add('hidden'); }
-
-    function saveWish() {
-      const title = document.getElementById('wish-title').value.trim();
-      const cost = parseInt(document.getElementById('wish-cost').value) || 0;
-      const icon = document.getElementById('wish-icon').value;
-
-      if (!title || cost <= 0) {
-        alert('タイトルと費用（1円以上）を入力してください。');
-        return;
-      }
-
-      const newWish = { id: Date.now(), title, cost, icon };
-      wishes.push(newWish);
-      saveWishesToStorage();
-      renderWishes();
-      closeWishModal();
-    }
-
-    // ウィッシュの削除
-    function deleteWish(id) {
-      if (confirm('このウィッシュを削除しますか？')) {
-        wishes = wishes.filter(w => w.id !== id);
-        saveWishesToStorage();
-        renderWishes();
-      }
-    }
-
-    function saveWishesToStorage() {
-      try { localStorage.setItem(STORAGE_KEY_WISHES, JSON.stringify(wishes)); } catch (e) {}
-    }
-
-
-    // --- 3. タブとシリンダー ---
+    // タブ切り替え
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById('tab-' + tabId).classList.remove('hidden');
@@ -335,24 +433,8 @@
       document.getElementById('nav-' + tabId).classList.add('text-sage');
     }
 
-    const cylinderContainer = document.getElementById('cylinder-container');
-    let cylindersHTML = '';
-    for(let i = 1; i <= 12; i++) {
-      cylindersHTML += `
-        <div class="flex flex-col items-center z-10 w-full px-1">
-          <div class="relative w-6 h-20 bg-gray-100 rounded-t-sm rounded-b-xl overflow-hidden shadow-inner">
-            <div class="water-fill absolute bottom-0 w-full rounded-b-xl" style="height: 100%;"></div>
-          </div>
-          <span class="text-[9px] mt-1 font-bold text-gray-400">${i}月</span>
-        </div>
-      `;
-    }
-    cylinderContainer.innerHTML = '<div class="absolute bottom-3 left-3 right-3 h-2 bg-sageLight/30 rounded-full"></div>' + 
-                                  '<div class="flex justify-between w-full z-10 px-1">' + cylindersHTML + '</div>';
-
-    // 初期化実行
-    updateBudgetUI();
-    renderWishes();
+    // 初期起動
+    updateUI();
   </script>
 </body>
 </html>
