@@ -11,8 +11,8 @@
         extend: {
           colors: {
             ivory: '#FDFBF7',
-            aqua: '#6B9CA3',       /* メインカラー：シーグラスブルー */
-            aquaLight: '#B7D3D6',  /* 淡いアクアブルー */
+            aqua: '#6B9CA3',       
+            aquaLight: '#B7D3D6',  
             textMain: '#4A4A4A',
             ticketBg: '#F4F1EA'
           }
@@ -24,10 +24,9 @@
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* 水の表現（アクアブルーのグラデーション） */
     .water-fill {
       background: linear-gradient(180deg, #A8CFD3 0%, #6B9CA3 100%);
-      transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* 少しぽよんと跳ねるような水面 */
+      transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); 
       border-top: 1px solid rgba(255,255,255,0.4);
     }
     
@@ -48,6 +47,10 @@
     }
     .ticket-card::before { left: -9px; border-right-color: transparent; border-bottom-color: transparent; transform: translateY(-50%) rotate(-45deg); }
     .ticket-card::after { right: -9px; border-left-color: transparent; border-top-color: transparent; transform: translateY(-50%) rotate(-45deg); }
+
+    #spend-gauge {
+      transition: background 1s ease-out;
+    }
   </style>
 </head>
 <body class="bg-gray-100 flex justify-center min-h-screen text-textMain font-sans">
@@ -81,7 +84,6 @@
       
       <!-- ① Plan タブ -->
       <div id="tab-plan" class="tab-content block p-6">
-        
         <div class="mb-8">
           <div class="flex justify-between items-end mb-2">
             <h2 class="font-bold text-lg">12連アクア・シリンダー</h2>
@@ -100,8 +102,35 @@
           <h2 class="font-bold text-lg">ウィッシュボード</h2>
           <button onclick="openWishModal()" class="text-xs text-aqua font-bold px-2 py-1 bg-aqua/10 rounded hover:bg-aqua/20 transition-colors shadow-sm">＋ 追加</button>
         </div>
+
+        <!-- コントロールパネル（絞り込み・ソート） -->
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-4 space-y-3">
+          <!-- カテゴリーフィルター -->
+          <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1" id="category-filters">
+            <button onclick="setFilter('All')" class="filter-btn active shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-aqua text-white transition-colors">すべて</button>
+            <button onclick="setFilter('🚄')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">🚄 鉄道</button>
+            <button onclick="setFilter('💎')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">💎 石拾い</button>
+            <button onclick="setFilter('♨️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">♨️ 温泉</button>
+            <button onclick="setFilter('💆‍♀️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">💆‍♀️ スパ</button>
+            <button onclick="setFilter('🍽️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">🍽️ 食事</button>
+            <button onclick="setFilter('🌿')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">🌿 植物</button>
+          </div>
+          
+          <div class="flex justify-between items-center border-t border-gray-100 pt-2">
+            <!-- 未定のみトグル -->
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="filter-unassigned" onchange="toggleUnassigned()" class="w-3.5 h-3.5 accent-aqua">
+              <span class="text-[11px] font-bold text-gray-600">未定(配置待ち)のみ</span>
+            </label>
+            <!-- ソート順 -->
+            <select id="sort-order" onchange="changeSort(this.value)" class="text-[11px] font-bold text-gray-600 bg-transparent focus:outline-none cursor-pointer">
+              <option value="newest">登録が新しい順</option>
+              <option value="price-high">金額が高い順</option>
+              <option value="price-low">金額が安い順</option>
+            </select>
+          </div>
+        </div>
         
-        <!-- ウィッシュリスト表示領域 -->
         <div class="space-y-3" id="wish-list">
           <!-- JSで動的に生成 -->
         </div>
@@ -109,8 +138,48 @@
 
       <!-- ② Spend タブ -->
       <div id="tab-spend" class="tab-content hidden p-6">
-        <h2 class="font-bold text-lg mb-4">Spend - 味わう -</h2>
-        <p class="text-sm text-gray-500">※順次実装予定です</p>
+        <div class="text-center mb-8">
+          <h2 class="font-bold text-lg mb-2" id="spend-month-title">今月の使い切りメーター</h2>
+          <p class="text-[10px] text-gray-500 mb-5">罪悪感ゼロで自分のために注ぎ込み、メーターを満たしましょう。</p>
+          
+          <div class="relative w-48 h-48 mx-auto rounded-full bg-gray-100 shadow-inner">
+            <div id="spend-gauge" class="absolute inset-0 rounded-full" style="background: conic-gradient(#6B9CA3 0%, transparent 0%);"></div>
+            <div class="absolute inset-3 bg-ivory rounded-full flex flex-col items-center justify-center shadow-sm border border-white">
+              <span class="text-[10px] text-gray-400 font-bold mb-1">今月の体験ストック</span>
+              <span id="spend-amount" class="text-3xl font-bold text-aqua tracking-tight">¥0</span>
+              <span id="spend-remaining" class="text-[9px] text-gray-400 mt-2 border-t border-gray-200 pt-1.5 w-3/4">残枠: ¥130,000</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-aquaLight/30 mb-8 relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-16 h-16 bg-aqua/5 rounded-bl-full -z-10"></div>
+          <h3 class="text-xs font-bold text-aqua mb-2 flex items-center gap-1.5">
+            <span class="text-base">✨</span> ふらっと提案
+          </h3>
+          <div id="spend-proposal" class="text-sm text-gray-600 leading-relaxed min-h-[3rem]"></div>
+        </div>
+
+        <div>
+          <h3 class="font-bold text-sm mb-3 text-gray-700 flex items-center gap-2">
+            <span class="text-lg">✍️</span> クイック体験記録
+          </h3>
+          <div class="space-y-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <input type="text" id="expense-title" placeholder="体験メモ (例: 極上スパ, 美味しいランチ)" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-aqua focus:bg-white transition-colors">
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <span class="absolute left-3 top-2.5 text-gray-400 text-sm">¥</span>
+                <input type="number" id="expense-cost" placeholder="金額を入力" class="w-full bg-gray-50 border border-gray-200 rounded-lg pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-aqua focus:bg-white transition-colors" step="100">
+              </div>
+              <select id="expense-stars" class="bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:border-aqua text-yellow-400">
+                <option value="5">★★★★★</option>
+                <option value="4">★★★★☆</option>
+                <option value="3">★★★☆☆</option>
+              </select>
+            </div>
+            <button onclick="saveExpense()" class="w-full bg-aqua text-white mt-1 py-3 rounded-lg text-sm font-bold shadow hover:bg-aquaLight transition-colors">豊かな余韻（Stock）へ送る</button>
+          </div>
+        </div>
       </div>
 
       <!-- ③ Stock タブ -->
@@ -136,7 +205,7 @@
       </button>
     </nav>
 
-    <!-- モーダル（設定・追加）※内容は変更なし・色のみaqua対応 -->
+    <!-- モーダル（設定） -->
     <div id="settings-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -163,6 +232,7 @@
       </div>
     </div>
 
+    <!-- モーダル（ウィッシュ追加） -->
     <div id="wish-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -216,17 +286,29 @@
   </div>
 
   <script>
+    // --- 1. データ状態と初期化 ---
     const STORAGE_KEY_BUDGET = 'solobloom_annual_budget';
     const STORAGE_KEY_WISHES = 'solobloom_wishes';
+    const STORAGE_KEY_EXPENSES = 'solobloom_expenses';
     
     let currentAnnualBudget = 1560000; 
     let wishes = [];
+    let expenses = []; 
+
+    // 表示フィルター＆ソート状態
+    let currentCategoryFilter = 'All'; // 'All' またはアイコン文字
+    let showUnassignedOnly = false;
+    let currentSortOrder = 'newest'; // 'newest', 'price-high', 'price-low'
+
+    const currentMonth = new Date().getMonth() + 1;
 
     const initialWishes = [
       { id: 1, title: '青森・錦石拾いの旅', cost: 85000, icon: '🚄', month: '9' },
       { id: 2, title: '極上ヘッドスパ（ご褒美）', cost: 18000, icon: '💆‍♀️', month: '2' },
       { id: 3, title: '讃岐サヌカイトと温泉旅', cost: 65000, icon: '♨️', month: '4' },
-      { id: 4, title: '北海道・ペリドット採取', cost: 150000, icon: '💎', month: '' } // 未定
+      { id: 4, title: '北海道・ペリドット採取', cost: 150000, icon: '💎', month: '' },
+      { id: 5, title: 'ガーデン用オリーブ新調', cost: 12000, icon: '🌿', month: '' },
+      { id: 6, title: '糸魚川の翡翠探し', cost: 45000, icon: '💎', month: '10' }
     ];
 
     try {
@@ -235,6 +317,9 @@
 
       const savedWishes = localStorage.getItem(STORAGE_KEY_WISHES);
       wishes = savedWishes ? JSON.parse(savedWishes) : initialWishes;
+
+      const savedExpenses = localStorage.getItem(STORAGE_KEY_EXPENSES);
+      expenses = savedExpenses ? JSON.parse(savedExpenses) : [];
     } catch (e) {
       wishes = initialWishes;
     }
@@ -243,6 +328,7 @@
       try {
         localStorage.setItem(STORAGE_KEY_BUDGET, currentAnnualBudget);
         localStorage.setItem(STORAGE_KEY_WISHES, JSON.stringify(wishes));
+        localStorage.setItem(STORAGE_KEY_EXPENSES, JSON.stringify(expenses));
       } catch (e) {}
       updateUI();
     }
@@ -251,54 +337,67 @@
       document.getElementById('badge-monthly-budget').textContent = `¥${Math.floor(currentAnnualBudget / 12).toLocaleString()}`;
       renderWishes();
       renderCylinders();
+      renderSpendTab();
     }
 
-    // --- 連通管の物理法則（均等分配）ロジック ---
+    // --- フィルター・ソート機能 ---
+    function setFilter(icon) {
+      currentCategoryFilter = icon;
+      // ボタンのアクティブ状態を切り替え
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.textContent.includes(icon) || (icon === 'All' && btn.textContent === 'すべて')) {
+          btn.className = "filter-btn active shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-aqua text-white transition-colors";
+        } else {
+          btn.className = "filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors";
+        }
+      });
+      renderWishes();
+    }
+
+    function toggleUnassigned() {
+      showUnassignedOnly = document.getElementById('filter-unassigned').checked;
+      renderWishes();
+    }
+
+    function changeSort(order) {
+      currentSortOrder = order;
+      renderWishes();
+    }
+
+    // --- 連通管ロジック（変更なし） ---
     function renderCylinders() {
-      const monthlyBudget = currentAnnualBudget / 12; // 容量
-      
-      // 各月の最終的な水位と、その月に直接企てた額
+      const monthlyBudget = currentAnnualBudget / 12; 
       let finalWater = Array(12).fill(0);
       let directCosts = Array(12).fill(0);
-      let overflowPool = 0; // あふれた水の総量
+      let overflowPool = 0; 
       let annualTotalCost = 0;
 
-      // 1. 各月の直接コストを計算し、あふれた分をプールに流す
       for (let i = 1; i <= 12; i++) {
         const monthCost = wishes.filter(w => parseInt(w.month) === i).reduce((sum, w) => sum + w.cost, 0);
         directCosts[i-1] = monthCost;
         annualTotalCost += monthCost;
 
         if (monthCost > monthlyBudget) {
-          finalWater[i-1] = monthlyBudget; // シリンダーは上限で満杯
-          overflowPool += (monthCost - monthlyBudget); // あふれた分
+          finalWater[i-1] = monthlyBudget; 
+          overflowPool += (monthCost - monthlyBudget); 
         } else {
           finalWater[i-1] = monthCost;
         }
       }
 
-      // 2. あふれた水（overflowPool）を、まだ空きがある月に均等に注ぐ
-      // ※全て満杯になるまでループして均等に配分する（ウォーターフィル）
       let capacities = finalWater.map((w, index) => ({ index: index, cap: monthlyBudget - w }));
       let iterations = 0;
-
       while (overflowPool > 0.1 && iterations < 20) {
-        // まだ空きがある月を抽出
         let availableMonths = capacities.filter(m => m.cap > 0.1);
-        if (availableMonths.length === 0) break; // 全ての月が満杯になれば終了
-
-        // 空いている月に均等に配分
+        if (availableMonths.length === 0) break; 
         let share = overflowPool / availableMonths.length;
-        overflowPool = 0; // 一旦プールを空に
-
+        overflowPool = 0; 
         availableMonths.forEach(m => {
           if (share >= m.cap) {
-            // 注いだ水が空き容量を超えたら、満杯にして余りを再びプールへ
             finalWater[m.index] += m.cap;
             overflowPool += (share - m.cap);
             m.cap = 0;
           } else {
-            // 全て収まった場合
             finalWater[m.index] += share;
             m.cap -= share;
           }
@@ -306,23 +405,17 @@
         iterations++;
       }
 
-      // 3. UIの生成
       const cylinderContainer = document.getElementById('cylinder-container');
       let cylindersHTML = '';
-
       for (let i = 0; i < 12; i++) {
         const monthNum = i + 1;
-        // 水位のパーセンテージ（最大100%）
         const waterPercent = Math.min(100, (finalWater[i] / monthlyBudget) * 100);
-        
-        // その月に直接企てた額（枠を超えていれば強調表示）
         const directCost = directCosts[i];
         let costLabel = '';
         if (directCost > 0) {
           const overStyle = directCost > monthlyBudget ? 'text-red-400 font-extrabold' : 'text-gray-500 font-bold';
           costLabel = `<span class="text-[8px] mt-0.5 ${overStyle}">¥${(directCost/10000).toFixed(1)}万</span>`;
         }
-
         cylindersHTML += `
           <div class="flex flex-col items-center z-10 w-full px-1">
             <div class="relative w-6 h-20 bg-gray-100 rounded-t-sm rounded-b-xl overflow-hidden shadow-inner border border-gray-200">
@@ -333,12 +426,9 @@
           </div>
         `;
       }
-      
-      // 満杯の連通管（底のパイプも水色で光らせる）
       cylinderContainer.innerHTML = '<div class="absolute bottom-6 left-4 right-4 h-2 bg-aquaLight/40 rounded-full"></div>' + 
                                     '<div class="flex justify-between w-full z-10 px-1">' + cylindersHTML + '</div>';
 
-      // 年間調和のステータス更新
       const harmonyStatus = document.getElementById('annual-harmony-status');
       if (annualTotalCost <= currentAnnualBudget) {
         const remaining = currentAnnualBudget - annualTotalCost;
@@ -349,12 +439,30 @@
       }
     }
 
+    // --- ウィッシュリスト描画（フィルター＆ソート適用） ---
     function renderWishes() {
       const listContainer = document.getElementById('wish-list');
       listContainer.innerHTML = ''; 
+
+      // 1. フィルター適用
+      let displayWishes = wishes.filter(w => {
+        if (currentCategoryFilter !== 'All' && w.icon !== currentCategoryFilter) return false;
+        if (showUnassignedOnly && w.month !== '') return false;
+        return true;
+      });
+
+      // 2. ソート適用
+      if (currentSortOrder === 'price-high') {
+        displayWishes.sort((a, b) => b.cost - a.cost);
+      } else if (currentSortOrder === 'price-low') {
+        displayWishes.sort((a, b) => a.cost - b.cost);
+      } else {
+        // newest (idの降順 = 新しいものが上)
+        displayWishes.sort((a, b) => b.id - a.id);
+      }
       
-      if (wishes.length === 0) {
-        listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">まだウィッシュがありません。<br>「＋ 追加」から企ててみましょう。</p>';
+      if (displayWishes.length === 0) {
+        listContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">条件に合うウィッシュがありません。</p>';
         return;
       }
 
@@ -367,7 +475,7 @@
         return options;
       };
 
-      wishes.forEach(wish => {
+      displayWishes.forEach(wish => {
         const monthBg = wish.month ? 'bg-aqua/10 text-aqua border-aqua/30' : 'bg-transparent text-gray-400 border-transparent';
         const cardHTML = `
           <div class="ticket-card rounded-lg flex shadow-sm">
@@ -396,10 +504,50 @@
 
     function updateWishMonth(id, newMonth) {
       const wishIndex = wishes.findIndex(w => w.id === id);
-      if (wishIndex !== -1) {
-        wishes[wishIndex].month = newMonth;
-        saveData(); 
+      if (wishIndex !== -1) { wishes[wishIndex].month = newMonth; saveData(); }
+    }
+
+    // --- Spendタブ（変更なし） ---
+    function renderSpendTab() {
+      const monthlyBudget = currentAnnualBudget / 12;
+      const currentMonthExpenses = expenses.filter(exp => new Date(exp.date).getMonth() + 1 === currentMonth);
+      const totalSpent = currentMonthExpenses.reduce((sum, exp) => sum + exp.cost, 0);
+      
+      document.getElementById('spend-month-title').textContent = `${currentMonth}月の使い切りメーター`;
+      document.getElementById('spend-amount').textContent = `¥${totalSpent.toLocaleString()}`;
+      
+      const percent = Math.min(100, (totalSpent / monthlyBudget) * 100);
+      const gauge = document.getElementById('spend-gauge');
+      gauge.style.background = `conic-gradient(#6B9CA3 0%, #6B9CA3 ${percent}%, transparent ${percent}%, transparent 100%)`;
+      
+      const remaining = Math.max(0, monthlyBudget - totalSpent);
+      document.getElementById('spend-remaining').textContent = `残枠: ¥${remaining.toLocaleString()}`;
+
+      generateProposal();
+    }
+
+    function generateProposal() {
+      const proposalEl = document.getElementById('spend-proposal');
+      const candidates = wishes.filter(w => !w.month || parseInt(w.month) === currentMonth);
+      if (candidates.length > 0) {
+        const wish = candidates[Math.floor(Math.random() * candidates.length)];
+        proposalEl.innerHTML = `今週末、空き時間がありますね。<br>ウィッシュリストの<strong class="text-aqua">「${wish.icon} ${wish.title}」</strong>を実行して、日常をリフレッシュしませんか？`;
+      } else {
+        proposalEl.innerHTML = `今月予定しているウィッシュは見当たりません。<br>Planタブから新しい企てを追加してみましょう！`;
       }
+    }
+
+    function saveExpense() {
+      const title = document.getElementById('expense-title').value.trim();
+      const cost = parseInt(document.getElementById('expense-cost').value) || 0;
+      const stars = document.getElementById('expense-stars').value;
+      if (!title || cost <= 0) { alert('体験メモと金額を正しく入力してください。'); return; }
+
+      expenses.push({ id: Date.now(), title: title, cost: cost, stars: stars, date: new Date().toISOString() });
+      document.getElementById('expense-title').value = '';
+      document.getElementById('expense-cost').value = '';
+      saveData();
+      alert(`「${title}」の体験が Stock（豊かな余韻）に保存され、メーターが上昇しました！`);
     }
 
     const modalWish = document.getElementById('wish-modal');
@@ -410,27 +558,18 @@
       modalWish.classList.remove('hidden');
     }
     function closeWishModal() { modalWish.classList.add('hidden'); }
-
     function saveWish() {
       const title = document.getElementById('wish-title').value.trim();
       const cost = parseInt(document.getElementById('wish-cost').value) || 0;
       const month = document.getElementById('wish-month').value;
       const icon = document.getElementById('wish-icon').value;
-
-      if (!title || cost <= 0) {
-        alert('タイトルと費用（1円以上）を入力してください。');
-        return;
-      }
+      if (!title || cost <= 0) { alert('タイトルと費用（1円以上）を入力してください。'); return; }
       wishes.push({ id: Date.now(), title, cost, month, icon });
       saveData();
       closeWishModal();
     }
-
     function deleteWish(id) {
-      if (confirm('このウィッシュを削除しますか？')) {
-        wishes = wishes.filter(w => w.id !== id);
-        saveData();
-      }
+      if (confirm('このウィッシュを削除しますか？')) { wishes = wishes.filter(w => w.id !== id); saveData(); }
     }
 
     const modalSettings = document.getElementById('settings-modal');
@@ -442,11 +581,7 @@
     function closeSettingsModal() { modalSettings.classList.add('hidden'); }
     function saveAnnualBudget() {
       const val = parseInt(document.getElementById('modal-annual-budget').value) || 0;
-      if (val > 0) {
-        currentAnnualBudget = val;
-        saveData();
-        closeSettingsModal();
-      }
+      if (val > 0) { currentAnnualBudget = val; saveData(); closeSettingsModal(); }
     }
     document.getElementById('modal-annual-budget').addEventListener('input', (e) => {
       document.getElementById('modal-monthly-preview').textContent = `¥${Math.floor((parseInt(e.target.value)||0) / 12).toLocaleString()}`;
