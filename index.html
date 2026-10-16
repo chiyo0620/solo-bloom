@@ -298,14 +298,14 @@
 
   <script>
     // ==========================================
-    // 🔑 1. Supabase の接続設定 (正しいURLとキーをセット)
+    // 🔑 1. Supabase の接続設定
     // ==========================================
     const SUPABASE_URL = 'https://qdibmtxpgsxmktsynjcc.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_D5mS7G5FHWoo3XJ8--9TVw_Lhn18mmf';
 
     let supabase = null;
     try {
-      if (typeof window.supabase !== 'undefined') {
+      if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_KEY !== 'YOUR_SUPABASE_KEY') {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       }
     } catch (e) {
@@ -471,453 +471,9 @@
           try {
             await supabase.from('expenses').delete().eq('id', id);
           } catch (e) {
-            console.warn('体験削除クラウド同期失敗:', eコンソール画面とコードの画像をお送りいただき、ありがとうございます。原因が2つ、はっきりと分かりました！
-
-### 原因1: 変数 `supabase` の重複宣言（フリーズの根本原因）
-コンソールの最初のエラーに `Uncaught SyntaxError: Identifier 'supabase' has already been declared` と出ています[cite: 5]。これは、JavaScriptの中で `let supabase = null;` という同じ名前の変数を2回宣言してしまっているため、そこでプログラムが完全に停止し、以降のタブ切り替えや追加ボタンなどの機能（`setFilter` や `switchTab` など）がすべて動かなくなっている状態です[cite: 5]。
-
-### 原因2: Supabase URL の形式間違い
-コードの画像[cite: 6]を拝見すると、`SUPABASE_URL` に `/rest/v1/` が余分についてしまっています[cite: 6]。
-*   **現在の記述:** `'https://qdibmtxpgsxmktsynjcc.supabase.co/rest/v1/'`[cite: 6]
-*   **正しい形式:** `'https://qdibmtxpgsxmktsynjcc.supabase.co'` （`.co` で終わる必要があります）
-
----
-
-### 修正方法
-
-これらのエラーをすべて修正し、いただいた正しいURLとキーをセットした**「完全動作版」**を作成しました。
-以下のコードで `index.html` を**丸ごと上書き保存（全選択してペースト）**して、再度確認してみてください。これでおそらく完璧に動くはずです！
-
-```html
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solo Bloom - ゆとり費アプリ</title>
-  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-  <!-- Supabase クライアント -->
-  <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            ivory: '#FDFBF7',
-            aqua: '#6B9CA3',       
-            aquaLight: '#B7D3D6',  
-            textMain: '#4A4A4A',
-            ticketBg: '#F4F1EA'
+            console.warn('体験削除クラウド同期失敗:', e);
           }
         }
-      }
-    }
-  </script>
-  <style>
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    .water-fill {
-      background: linear-gradient(180deg, #A8CFD3 0%, #6B9CA3 100%);
-      transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); 
-      border-top: 1px solid rgba(255,255,255,0.4);
-    }
-    
-    .ticket-card {
-      position: relative;
-      background: #F4F1EA;
-      border: 1px solid #E5E0D8;
-    }
-    .ticket-card::before, .ticket-card::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      width: 16px; height: 16px;
-      background-color: #FDFBF7;
-      border-radius: 50%;
-      transform: translateY(-50%);
-      border: 1px solid #E5E0D8;
-    }
-    .ticket-card::before { left: -9px; border-right-color: transparent; border-bottom-color: transparent; transform: translateY(-50%) rotate(-45deg); }
-    .ticket-card::after { right: -9px; border-left-color: transparent; border-top-color: transparent; transform: translateY(-50%) rotate(-45deg); }
-
-    #spend-gauge {
-      transition: background 1s ease-out;
-    }
-  </style>
-</head>
-<body class="bg-gray-100 flex justify-center min-h-screen text-textMain font-sans">
-
-  <div class="bg-ivory w-full max-w-md h-screen relative shadow-xl overflow-hidden flex flex-col">
-    
-    <!-- ヘッダー -->
-    <header class="pt-8 pb-3 px-6 bg-ivory z-10 border-b border-gray-200 shrink-0">
-      <div class="flex items-center justify-center">
-        <div>
-          <h1 class="text-2xl font-serif text-aqua tracking-widest text-center">Solo Bloom</h1>
-          <p class="text-[10px] text-center text-gray-400 tracking-wider mt-0.5">人生の豊かさをストックする</p>
-        </div>
-      </div>
-      <div class="mt-3 flex items-center justify-between text-[11px] px-3 py-1.5 bg-white/70 border border-aquaLight/40 rounded-full text-gray-600">
-        <span class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-aqua"></span>
-          <span>ゆとり枠：<strong id="badge-monthly-budget" class="text-aqua font-bold">¥130,000</strong> / 月</span>
-        </span>
-        <button onclick="openSettingsModal()" class="text-gray-400 hover:text-aqua transition-colors ml-2" title="年間ゆとり費の設定">
-          <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </button>
-      </div>
-    </header>
-
-    <!-- メインコンテンツ領域 -->
-    <main class="flex-1 overflow-y-auto pb-24 scroll-smooth">
-      
-      <!-- ① Plan タブ -->
-      <div id="tab-plan" class="tab-content block p-6">
-        <div class="mb-8">
-          <div class="flex justify-between items-end mb-2">
-            <h2 class="font-bold text-lg">12連アクア・シリンダー</h2>
-            <span id="annual-harmony-status" class="text-[10px] font-bold"></span>
-          </div>
-          <p class="text-[10px] text-gray-500 mb-3 leading-tight">カードを割り当てると水が満ちます。枠を超えてあふれた水は、底の管を通って空いている月に均等に注がれます。</p>
-          <div class="overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2">
-            <div class="flex items-end h-36 bg-white p-3 rounded-xl shadow-inner relative min-w-[640px]" id="cylinder-container"></div>
-          </div>
-        </div>
-
-        <div class="flex justify-between items-end mb-3">
-          <h2 class="font-bold text-lg">ウィッシュボード</h2>
-          <button onclick="openWishModal()" class="text-xs text-aqua font-bold px-2 py-1 bg-aqua/10 rounded hover:bg-aqua/20 transition-colors shadow-sm">＋ 追加</button>
-        </div>
-
-        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-4 space-y-3">
-          <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1" id="category-filters">
-            <button onclick="setFilter('All')" class="filter-btn active shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-aqua text-white transition-colors">すべて</button>
-            <button onclick="setFilter('🚄')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🚄 鉄道</button>
-            <button onclick="setFilter('💎')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">💎 石拾い</button>
-            <button onclick="setFilter('♨️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">♨️ 温泉</button>
-            <button onclick="setFilter('💆‍♀️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">💆‍♀️ スパ</button>
-            <button onclick="setFilter('🍽️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🍽️ 食事</button>
-            <button onclick="setFilter('🌿')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🌿 植物</button>
-          </div>
-          <div class="flex justify-between items-center border-t border-gray-100 pt-2">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" id="filter-unassigned" onchange="toggleUnassigned()" class="w-3.5 h-3.5 accent-aqua">
-              <span class="text-[11px] font-bold text-gray-600">未定(配置待ち)のみ</span>
-            </label>
-            <select id="sort-order" onchange="changeSort(this.value)" class="text-[11px] font-bold text-gray-600 bg-transparent focus:outline-none cursor-pointer">
-              <option value="newest">登録が新しい順</option>
-              <option value="price-high">金額が高い順</option>
-              <option value="price-low">金額が安い順</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="space-y-3" id="wish-list"></div>
-      </div>
-
-      <!-- ② Spend タブ -->
-      <div id="tab-spend" class="tab-content hidden p-6">
-        <div class="text-center mb-8">
-          <h2 class="font-bold text-lg mb-2" id="spend-month-title">今月の使い切りメーター</h2>
-          <p class="text-[10px] text-gray-500 mb-5">罪悪感ゼロで自分のために注ぎ込み、メーターを満たしましょう。</p>
-          
-          <div class="relative w-48 h-48 mx-auto rounded-full bg-gray-100 shadow-inner">
-            <div id="spend-gauge" class="absolute inset-0 rounded-full" style="background: conic-gradient(#6B9CA3 0%, transparent 0%);"></div>
-            <div class="absolute inset-3 bg-ivory rounded-full flex flex-col items-center justify-center shadow-sm border border-white">
-              <span class="text-[10px] text-gray-400 font-bold mb-1">今月の体験ストック</span>
-              <span id="spend-amount" class="text-3xl font-bold text-aqua tracking-tight">¥0</span>
-              <span id="spend-remaining" class="text-[9px] text-gray-400 mt-2 border-t border-gray-200 pt-1.5 w-3/4">残枠: ¥130,000</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-aquaLight/30 mb-8 relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-16 h-16 bg-aqua/5 rounded-bl-full -z-10"></div>
-          <h3 class="text-xs font-bold text-aqua mb-2 flex items-center gap-1.5">
-            <span class="text-base">✨</span> ふらっと提案
-          </h3>
-          <div id="spend-proposal" class="text-sm text-gray-600 leading-relaxed min-h-[3rem]"></div>
-        </div>
-
-        <div>
-          <h3 class="font-bold text-sm mb-3 text-gray-700 flex items-center gap-2">
-            <span class="text-lg">✍️</span> クイック体験記録
-          </h3>
-          <div class="space-y-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex gap-2">
-              <select id="expense-icon" class="w-16 bg-gray-50 border border-gray-200 rounded-lg px-2 py-2.5 text-base focus:outline-none focus:border-aqua text-center">
-                <option value="🍽️">🍽️</option><option value="🚄">🚄</option><option value="💎">💎</option>
-                <option value="♨️">♨️</option><option value="💆‍♀️">💆‍♀️</option><option value="🌿">🌿</option>
-                <option value="🛍️">🛍️</option>
-              </select>
-              <input type="text" id="expense-title" placeholder="体験メモ (例: 極上スパ)" class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-aqua focus:bg-white transition-colors">
-            </div>
-            <div class="flex gap-2">
-              <div class="relative flex-1">
-                <span class="absolute left-3 top-2.5 text-gray-400 text-sm">¥</span>
-                <input type="number" id="expense-cost" placeholder="金額を入力" class="w-full bg-gray-50 border border-gray-200 rounded-lg pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-aqua focus:bg-white transition-colors" step="100">
-              </div>
-              <select id="expense-stars" class="bg-gray-50 border border-gray-200 rounded-lg px-2 py-2.5 text-sm focus:outline-none focus:border-aqua text-yellow-400">
-                <option value="5">★★★★★</option>
-                <option value="4">★★★★☆</option>
-                <option value="3">★★★☆☆</option>
-              </select>
-            </div>
-            <button onclick="saveExpense()" class="w-full bg-aqua text-white mt-1 py-3 rounded-lg text-sm font-bold shadow hover:bg-aquaLight transition-colors">豊かな余韻（Stock）へ送る</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ③ Stock タブ -->
-      <div id="tab-stock" class="tab-content hidden p-6">
-        <div class="flex justify-between items-end mb-6 bg-aqua p-5 rounded-xl text-white shadow-md relative overflow-hidden">
-          <div class="absolute -right-4 -top-4 text-7xl opacity-10">✨</div>
-          <div class="z-10 relative">
-            <h2 class="font-bold text-sm opacity-90">心の豊かさカウンター</h2>
-            <p class="text-4xl font-serif mt-1 tracking-tight"><span id="stock-total-stars">0</span> <span class="text-sm font-normal tracking-normal opacity-80">Stars ★</span></p>
-          </div>
-          <div class="text-right z-10 relative">
-            <p class="text-xs opacity-80" id="stock-year-label">2026年 累計</p>
-          </div>
-        </div>
-
-        <h3 class="font-bold text-lg mb-4 text-gray-800">マイ・コレクション</h3>
-        
-        <div class="grid grid-cols-2 gap-3" id="stock-gallery"></div>
-      </div>
-    </main>
-
-    <!-- ボトムナビゲーション -->
-    <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex justify-around pb-6 pt-3 px-2 z-20 shrink-0">
-      <button onclick="switchTab('plan')" id="nav-plan" class="nav-btn flex flex-col items-center text-aqua w-1/3">
-        <span class="text-xl mb-1">🪴</span>
-        <span class="text-[10px] font-bold">Plan - 企てる -</span>
-      </button>
-      <button onclick="switchTab('spend')" id="nav-spend" class="nav-btn flex flex-col items-center text-gray-400 w-1/3">
-        <span class="text-xl mb-1">☕️</span>
-        <span class="text-[10px] font-bold">Spend - 味わう -</span>
-      </button>
-      <button onclick="switchTab('stock')" id="nav-stock" class="nav-btn flex flex-col items-center text-gray-400 w-1/3">
-        <span class="text-xl mb-1">📚</span>
-        <span class="text-[10px] font-bold">Stock - 豊かな余韻 -</span>
-      </button>
-    </nav>
-
-    <!-- モーダル（設定） -->
-    <div id="settings-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-      <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-base text-gray-800">年間のゆとり費設定</h3>
-          <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
-        </div>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-[11px] font-bold text-gray-600 mb-1">年間予算（円）</label>
-            <div class="relative">
-              <span class="absolute left-3 top-2.5 text-gray-400 text-sm">¥</span>
-              <input type="number" id="modal-annual-budget" class="w-full bg-white border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-base font-bold text-aqua focus:outline-none focus:border-aqua" step="10000">
-            </div>
-          </div>
-          <div class="bg-white/80 p-3 rounded-lg border border-gray-200">
-            <span class="text-[10px] text-gray-500 block">月あたりのゆとり枠（容量）</span>
-            <span id="modal-monthly-preview" class="text-base font-bold text-gray-700">¥130,000</span>
-          </div>
-        </div>
-        <div class="mt-6 flex gap-2">
-          <button onclick="closeSettingsModal()" class="w-1/2 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">キャンセル</button>
-          <button onclick="saveAnnualBudget()" class="w-1/2 py-2 text-xs font-bold text-white bg-aqua rounded-lg hover:bg-aquaLight shadow">保存する</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- モーダル（ウィッシュ追加） -->
-    <div id="wish-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-      <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-base text-gray-800">新しいウィッシュを企てる</h3>
-          <button onclick="closeWishModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
-        </div>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-[11px] font-bold text-gray-600 mb-1">体験・アイテム名</label>
-            <input type="text" id="wish-title" placeholder="例：青森・錦石拾いの旅" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-aqua">
-          </div>
-          <div class="flex gap-2">
-            <div class="flex-1">
-              <label class="block text-[11px] font-bold text-gray-600 mb-1">見込み費用（円）</label>
-              <div class="relative">
-                <span class="absolute left-3 top-2 text-gray-400 text-sm">¥</span>
-                <input type="number" id="wish-cost" placeholder="85000" class="w-full bg-white border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-aqua" step="1000">
-              </div>
-            </div>
-            <div class="w-24">
-              <label class="block text-[11px] font-bold text-gray-600 mb-1">予定月</label>
-              <select id="wish-month" class="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:border-aqua text-center">
-                <option value="">未定</option>
-                <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
-                <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
-                <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
-                <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-gray-600 mb-1">アイコン</label>
-            <select id="wish-icon" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:border-aqua">
-              <option value="🚄">🚄 鉄道旅・新幹線</option>
-              <option value="💎">💎 石拾い・鉱物</option>
-              <option value="♨️">♨️ 温泉・宿泊</option>
-              <option value="💆‍♀️">💆‍♀️ スパ・エステ</option>
-              <option value="🍽️">🍽️ 美味しいもの</option>
-              <option value="🌿">🌿 植物・ガーデニング</option>
-              <option value="🛍️">🛍️ その他・お買い物</option>
-            </select>
-          </div>
-        </div>
-        <div class="mt-6 flex gap-2">
-          <button onclick="closeWishModal()" class="w-1/2 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">キャンセル</button>
-          <button onclick="saveWish()" class="w-1/2 py-2 text-xs font-bold text-white bg-aqua rounded-lg hover:bg-aquaLight shadow">リストに追加</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-    // ==========================================
-    // 🔑 1. Supabase の接続設定
-    // ※ 正しいURLとキーに修正済み
-    // ==========================================
-    const SUPABASE_URL = '[https://qdibmtxpgsxmktsynjcc.supabase.co](https://qdibmtxpgsxmktsynjcc.supabase.co)';
-    const SUPABASE_KEY = 'sb_publishable_D5mS7G5FHWoo3XJ8--9TVw_Lhn18mmf';
-
-    // 以前の宣言エラーを防ぐため、安全にクライアントを生成
-    const sbClient = (typeof window.supabase !== 'undefined') 
-                     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) 
-                     : null;
-
-    // --- 状態管理 ---
-    let currentAnnualBudget = 1560000; 
-    let wishes = [];
-    let expenses = []; 
-
-    let currentCategoryFilter = 'All';
-    let showUnassignedOnly = false;
-    let currentSortOrder = 'newest';
-
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth() + 1;
-
-    // ==========================================
-    // ☁️ 2. Supabase 連携ロジック
-    // ==========================================
-    async function loadDataFromSupabase() {
-      if (!sbClient) return;
-      try {
-        const [budgetRes, wishesRes, expensesRes] = await Promise.all([
-          sbClient.from('app_settings').select('value').eq('key', 'annual_budget').maybeSingle(),
-          sbClient.from('wishes').select('*').order('id', { ascending: false }),
-          sbClient.from('expenses').select('*').order('date', { ascending: false })
-        ]);
-
-        if (budgetRes?.data?.value) {
-          currentAnnualBudget = parseInt(budgetRes.data.value);
-        }
-        if (wishesRes?.data) {
-          wishes = wishesRes.data;
-        }
-        if (expensesRes?.data) {
-          expenses = expensesRes.data;
-        }
-        updateUI();
-      } catch (err) {
-        console.warn('Supabase通信エラー:', err);
-      }
-    }
-
-    async function saveWish() {
-      const title = document.getElementById('wish-title').value.trim();
-      const cost = parseInt(document.getElementById('wish-cost').value) || 0;
-      const month = document.getElementById('wish-month').value;
-      const icon = document.getElementById('wish-icon').value;
-
-      if (!title || cost <= 0) {
-        alert('タイトルと費用（1円以上）を入力してください。');
-        return;
-      }
-
-      const tempId = Date.now();
-      const newWish = { id: tempId, title, cost, month, icon };
-      wishes.unshift(newWish);
-      closeWishModal();
-      updateUI();
-
-      if (sbClient) {
-        const { data, error } = await sbClient.from('wishes').insert([{ title, cost, month, icon }]).select();
-        if (!error && data && data[0]) {
-          const index = wishes.findIndex(w => w.id === tempId);
-          if (index !== -1) wishes[index].id = data[0].id;
-        }
-      }
-    }
-
-    async function updateWishMonth(id, newMonth) {
-      const wish = wishes.find(w => w.id === id);
-      if (wish) {
-        wish.month = newMonth;
-        updateUI();
-        if (sbClient) await sbClient.from('wishes').update({ month: newMonth }).eq('id', id);
-      }
-    }
-
-    async function deleteWish(id) {
-      if (confirm('このウィッシュを削除しますか？')) {
-        wishes = wishes.filter(w => w.id !== id);
-        updateUI();
-        if (sbClient) await sbClient.from('wishes').delete().eq('id', id);
-      }
-    }
-
-    async function saveExpense() {
-      const icon = document.getElementById('expense-icon').value;
-      const title = document.getElementById('expense-title').value.trim();
-      const cost = parseInt(document.getElementById('expense-cost').value) || 0;
-      const stars = parseInt(document.getElementById('expense-stars').value) || 5;
-
-      if (!title || cost <= 0) {
-        alert('体験メモと金額を正しく入力してください。');
-        return;
-      }
-
-      const tempId = Date.now();
-      const dateIso = new Date().toISOString();
-      const newExpense = { id: tempId, icon, title, cost, stars, date: dateIso };
-
-      expenses.unshift(newExpense);
-      document.getElementById('expense-title').value = '';
-      document.getElementById('expense-cost').value = '';
-      updateUI();
-      switchTab('stock');
-
-      if (sbClient) {
-        const { data, error } = await sbClient.from('expenses').insert([{ icon, title, cost, stars, date: dateIso }]).select();
-        if (!error && data && data[0]) {
-          const index = expenses.findIndex(e => e.id === tempId);
-          if (index !== -1) expenses[index].id = data[0].id;
-        }
-      }
-    }
-
-    async function deleteExpense(id) {
-      if (confirm('この記録を削除しますか？')) {
-        expenses = expenses.filter(e => e.id !== id);
-        updateUI();
-        if (sbClient) await sbClient.from('expenses').delete().eq('id', id);
       }
     }
 
@@ -927,14 +483,22 @@
         currentAnnualBudget = val;
         updateUI();
         closeSettingsModal();
-        if (sbClient) {
-          await sbClient.from('app_settings').upsert({ key: 'annual_budget', value: JSON.stringify(currentAnnualBudget) });
+
+        if (supabase) {
+          try {
+            await supabase.from('app_settings').upsert({
+              key: 'annual_budget',
+              value: JSON.stringify(currentAnnualBudget)
+            });
+          } catch (e) {
+            console.warn('予算クラウド同期失敗:', e);
+          }
         }
       }
     }
 
     // ==========================================
-    // 🎨 3. UIレンダリング
+    // 🎨 3. UIレンダリング & 連通管ロジック
     // ==========================================
     function updateUI() {
       document.getElementById('badge-monthly-budget').textContent = `¥${Math.floor(currentAnnualBudget / 12).toLocaleString()}`;
@@ -1181,8 +745,9 @@
       document.querySelector('main').scrollTo(0, 0);
     }
 
-    // --- 起動処理 ---
+    // 画面初期描画を即座に実行
     updateUI();
+    // 非同期でクラウドデータを取得
     loadDataFromSupabase();
   </script>
 </body>
