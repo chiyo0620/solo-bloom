@@ -303,10 +303,11 @@
     const SUPABASE_URL = 'https://qdibmtxpgsxmktsynjcc.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_D5mS7G5FHWoo3XJ8--9TVw_Lhn18mmf';
 
-    let supabase = null;
+    // エラー回避のため、変数名を supabaseClient に変更しました
+    let supabaseClient = null;
     try {
-      if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_KEY !== 'YOUR_SUPABASE_KEY') {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      if (SUPABASE_URL && SUPABASE_KEY) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       }
     } catch (e) {
       console.warn('Supabase初期化エラー（ローカルモードで動作します）:', e);
@@ -332,16 +333,16 @@
     const currentMonth = currentDate.getMonth() + 1;
 
     // ==========================================
-    // ☁️ 2. Supabase 連携（エラー完全保護）
+    // ☁️ 2. Supabase 連携
     // ==========================================
     async function loadDataFromSupabase() {
-      if (!supabase) return;
+      if (!supabaseClient) return;
 
       try {
         const [budgetRes, wishesRes, expensesRes] = await Promise.all([
-          supabase.from('app_settings').select('value').eq('key', 'annual_budget').maybeSingle(),
-          supabase.from('wishes').select('*').order('id', { ascending: false }),
-          supabase.from('expenses').select('*').order('date', { ascending: false })
+          supabaseClient.from('app_settings').select('value').eq('key', 'annual_budget').maybeSingle(),
+          supabaseClient.from('wishes').select('*').order('id', { ascending: false }),
+          supabaseClient.from('expenses').select('*').order('date', { ascending: false })
         ]);
 
         if (budgetRes?.data?.value) {
@@ -377,9 +378,9 @@
       closeWishModal();
       updateUI();
 
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          const { data, error } = await supabase.from('wishes').insert([
+          const { data, error } = await supabaseClient.from('wishes').insert([
             { title, cost, month, icon }
           ]).select();
           if (!error && data && data[0]) {
@@ -397,9 +398,9 @@
         wish.month = newMonth;
         updateUI();
 
-        if (supabase) {
+        if (supabaseClient) {
           try {
-            await supabase.from('wishes').update({ month: newMonth }).eq('id', id);
+            await supabaseClient.from('wishes').update({ month: newMonth }).eq('id', id);
           } catch (e) {
             console.warn('月更新クラウド保存失敗:', e);
           }
@@ -412,9 +413,9 @@
         wishes = wishes.filter(w => w.id !== id);
         updateUI();
 
-        if (supabase) {
+        if (supabaseClient) {
           try {
-            await supabase.from('wishes').delete().eq('id', id);
+            await supabaseClient.from('wishes').delete().eq('id', id);
           } catch (e) {
             console.warn('ウィッシュ削除クラウド同期失敗:', e);
           }
@@ -448,9 +449,9 @@
       updateUI();
       switchTab('stock');
 
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          const { data, error } = await supabase.from('expenses').insert([{
+          const { data, error } = await supabaseClient.from('expenses').insert([{
             icon, title, cost, stars, date: newExpense.date
           }]).select();
           if (!error && data && data[0]) {
@@ -467,9 +468,9 @@
         expenses = expenses.filter(e => e.id !== id);
         updateUI();
 
-        if (supabase) {
+        if (supabaseClient) {
           try {
-            await supabase.from('expenses').delete().eq('id', id);
+            await supabaseClient.from('expenses').delete().eq('id', id);
           } catch (e) {
             console.warn('体験削除クラウド同期失敗:', e);
           }
@@ -484,9 +485,9 @@
         updateUI();
         closeSettingsModal();
 
-        if (supabase) {
+        if (supabaseClient) {
           try {
-            await supabase.from('app_settings').upsert({
+            await supabaseClient.from('app_settings').upsert({
               key: 'annual_budget',
               value: JSON.stringify(currentAnnualBudget)
             });
