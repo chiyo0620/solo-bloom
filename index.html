@@ -165,6 +165,7 @@
               </select>
               <input type="text" id="expense-title" placeholder="体験メモ (例: 極上スパ)" class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-aqua focus:bg-white transition-colors">
             </div>
+            
             <div class="flex gap-2">
               <div class="relative flex-1">
                 <span class="absolute left-3 top-2.5 text-gray-400 text-sm">¥</span>
@@ -176,7 +177,18 @@
                 <option value="3">★★★☆☆</option>
               </select>
             </div>
-            <button onclick="saveExpense()" class="w-full bg-aqua text-white mt-1 py-3 rounded-lg text-sm font-bold shadow hover:bg-aquaLight transition-colors">豊かな余韻（Stock）へ送る</button>
+
+            <!-- ★新規追加：写真アップロード枠 -->
+            <div>
+              <label class="block w-full bg-gray-50 border border-gray-200 border-dashed rounded-lg px-3 py-3 text-sm cursor-pointer hover:bg-aqua/5 transition-colors flex items-center justify-center text-gray-500">
+                <span id="file-name-display" class="truncate font-bold">📷 写真を添付する (任意)</span>
+                <input type="file" id="expense-image" accept="image/*" class="hidden" onchange="document.getElementById('file-name-display').textContent = this.files[0] ? this.files[0].name : '📷 写真を添付する (任意)'">
+              </label>
+            </div>
+
+            <button onclick="saveExpense()" class="w-full bg-aqua text-white mt-1 py-3 rounded-lg text-sm font-bold shadow hover:bg-aquaLight transition-colors flex items-center justify-center gap-2" id="save-expense-btn">
+              <span>豊かな余韻（Stock）へ送る</span>
+            </button>
           </div>
         </div>
       </div>
@@ -299,14 +311,14 @@
   <script>
     // ==========================================
     // 🔑 1. Supabase の接続設定
+    // ここをご自身のものに書き換えてください！
     // ==========================================
     const SUPABASE_URL = 'https://qdibmtxpgsxmktsynjcc.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkaWJtdHhwZ3N4bWt0c3luamNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDg2ODMsImV4cCI6MjEwNzcyNDY4M30.-n-hO2KwV20kkcfe46TyoyNdUaGat7GKHe1pINKVV3E';
 
-    // エラー回避のため、変数名を supabaseClient に変更しました
     let supabaseClient = null;
     try {
-      if (SUPABASE_URL && SUPABASE_KEY) {
+      if (SUPABASE_URL && SUPABASE_KEY && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       }
     } catch (e) {
@@ -315,13 +327,7 @@
 
     // --- 状態管理 ---
     let currentAnnualBudget = 1560000; 
-    let wishes = [
-      { id: 1, title: '青森・錦石拾いの旅', cost: 85000, icon: '🚄', month: '9' },
-      { id: 2, title: '極上ヘッドスパ（ご褒美）', cost: 18000, icon: '💆‍♀️', month: '2' },
-      { id: 3, title: '讃岐サヌカイトと温泉旅', cost: 65000, icon: '♨️', month: '4' },
-      { id: 4, title: '北海道・ペリドット採取', cost: 150000, icon: '💎', month: '' },
-      { id: 5, title: 'ガーデン用オリーブ新調', cost: 12000, icon: '🌿', month: '' }
-    ];
+    let wishes = [];
     let expenses = []; 
 
     let currentCategoryFilter = 'All';
@@ -345,19 +351,13 @@
           supabaseClient.from('expenses').select('*').order('date', { ascending: false })
         ]);
 
-        if (budgetRes?.data?.value) {
-          currentAnnualBudget = parseInt(budgetRes.data.value);
-        }
-        if (wishesRes?.data && wishesRes.data.length > 0) {
-          wishes = wishesRes.data;
-        }
-        if (expensesRes?.data) {
-          expenses = expensesRes.data;
-        }
+        if (budgetRes?.data?.value) currentAnnualBudget = parseInt(budgetRes.data.value);
+        if (wishesRes?.data) wishes = wishesRes.data;
+        if (expensesRes?.data) expenses = expensesRes.data;
 
         updateUI();
       } catch (err) {
-        console.warn('Supabaseデータ取得エラー（フォールバック表示を維持します）:', err);
+        console.warn('データ取得エラー:', err);
       }
     }
 
@@ -383,12 +383,8 @@
           const { data, error } = await supabaseClient.from('wishes').insert([
             { title, cost, month, icon }
           ]).select();
-          if (!error && data && data[0]) {
-            newWish.id = data[0].id;
-          }
-        } catch (e) {
-          console.warn('ウィッシュクラウド保存失敗:', e);
-        }
+          if (!error && data && data[0]) newWish.id = data[0].id;
+        } catch (e) {}
       }
     }
 
@@ -397,13 +393,8 @@
       if (wish) {
         wish.month = newMonth;
         updateUI();
-
         if (supabaseClient) {
-          try {
-            await supabaseClient.from('wishes').update({ month: newMonth }).eq('id', id);
-          } catch (e) {
-            console.warn('月更新クラウド保存失敗:', e);
-          }
+          try { await supabaseClient.from('wishes').update({ month: newMonth }).eq('id', id); } catch (e) {}
         }
       }
     }
@@ -412,26 +403,54 @@
       if (confirm('このウィッシュを削除しますか？')) {
         wishes = wishes.filter(w => w.id !== id);
         updateUI();
-
         if (supabaseClient) {
-          try {
-            await supabaseClient.from('wishes').delete().eq('id', id);
-          } catch (e) {
-            console.warn('ウィッシュ削除クラウド同期失敗:', e);
-          }
+          try { await supabaseClient.from('wishes').delete().eq('id', id); } catch (e) {}
         }
       }
     }
 
+    // ★ 写真アップロードと体験の記録
     async function saveExpense() {
       const icon = document.getElementById('expense-icon').value;
       const title = document.getElementById('expense-title').value.trim();
       const cost = parseInt(document.getElementById('expense-cost').value) || 0;
       const stars = parseInt(document.getElementById('expense-stars').value) || 5;
+      const imageFile = document.getElementById('expense-image').files[0];
+      const btn = document.getElementById('save-expense-btn');
 
       if (!title || cost <= 0) {
         alert('体験メモと金額を正しく入力してください。');
         return;
+      }
+
+      // ボタンをローディング状態に
+      const originalBtnText = btn.innerHTML;
+      btn.innerHTML = '送信中...';
+      btn.disabled = true;
+
+      let imageUrl = null;
+
+      // 写真が選ばれていたら Storage へアップロード
+      if (supabaseClient && imageFile) {
+        try {
+          const fileExt = imageFile.name.split('.').pop();
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { data: uploadData, error: uploadError } = await supabaseClient.storage
+            .from('solo-bloom-images')
+            .upload(fileName, imageFile);
+
+          if (!uploadError) {
+            const { data: publicUrlData } = supabaseClient.storage
+              .from('solo-bloom-images')
+              .getPublicUrl(fileName);
+            imageUrl = publicUrlData.publicUrl;
+          } else {
+            console.error('画像アップロードエラー:', uploadError);
+          }
+        } catch (e) {
+          console.error('画像処理エラー:', e);
+        }
       }
 
       const newExpense = {
@@ -440,26 +459,33 @@
         title,
         cost,
         stars,
+        image_url: imageUrl,
         date: new Date().toISOString()
       };
 
       expenses.unshift(newExpense);
+      
+      // フォームリセット
       document.getElementById('expense-title').value = '';
       document.getElementById('expense-cost').value = '';
+      document.getElementById('expense-image').value = '';
+      document.getElementById('file-name-display').textContent = '📷 写真を添付する (任意)';
+      btn.innerHTML = originalBtnText;
+      btn.disabled = false;
+      
       updateUI();
       switchTab('stock');
 
+      // データベースへ保存
       if (supabaseClient) {
         try {
           const { data, error } = await supabaseClient.from('expenses').insert([{
-            icon, title, cost, stars, date: newExpense.date
+            icon, title, cost, stars, date: newExpense.date, image_url: imageUrl
           }]).select();
           if (!error && data && data[0]) {
             newExpense.id = data[0].id;
           }
-        } catch (e) {
-          console.warn('体験記録クラウド同期失敗:', e);
-        }
+        } catch (e) {}
       }
     }
 
@@ -467,13 +493,8 @@
       if (confirm('この記録を削除しますか？')) {
         expenses = expenses.filter(e => e.id !== id);
         updateUI();
-
         if (supabaseClient) {
-          try {
-            await supabaseClient.from('expenses').delete().eq('id', id);
-          } catch (e) {
-            console.warn('体験削除クラウド同期失敗:', e);
-          }
+          try { await supabaseClient.from('expenses').delete().eq('id', id); } catch (e) {}
         }
       }
     }
@@ -484,16 +505,10 @@
         currentAnnualBudget = val;
         updateUI();
         closeSettingsModal();
-
         if (supabaseClient) {
           try {
-            await supabaseClient.from('app_settings').upsert({
-              key: 'annual_budget',
-              value: JSON.stringify(currentAnnualBudget)
-            });
-          } catch (e) {
-            console.warn('予算クラウド同期失敗:', e);
-          }
+            await supabaseClient.from('app_settings').upsert({ key: 'annual_budget', value: JSON.stringify(currentAnnualBudget) });
+          } catch (e) {}
         }
       }
     }
@@ -699,14 +714,25 @@
         const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
         const starStr = '★'.repeat(exp.stars) + '☆'.repeat(5 - exp.stars);
         
+        // 写真がある場合は背景画像をセットし、文字色を調整
+        const bgStyle = exp.image_url ? `background-image: url('${exp.image_url}'); background-size: cover; background-position: center;` : '';
+        const overlay = exp.image_url ? '<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-0"></div>' : '';
+        const textColor = exp.image_url ? 'text-white' : 'text-gray-800';
+        const dateColor = exp.image_url ? 'text-gray-200' : 'text-gray-400';
+        const iconDisplay = exp.image_url ? '' : `<div class="h-16 bg-aqua/5 rounded-md mb-2 flex items-center justify-center text-3xl border border-aqua/10">${exp.icon}</div>`;
+        const titleIcon = exp.image_url ? `${exp.icon} ` : '';
+
         const cardHTML = `
-          <div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 relative group">
-            <button onclick="deleteExpense(${exp.id})" class="absolute top-2 right-2 text-gray-300 hover:text-red-400 text-xs p-1 opacity-0 group-hover:opacity-100 transition-opacity" title="削除">✕</button>
-            <div class="h-20 bg-aqua/5 rounded-md mb-2 flex items-center justify-center text-4xl border border-aqua/10">${exp.icon}</div>
-            <p class="text-xs font-bold text-gray-800 truncate" title="${exp.title}">${exp.title}</p>
-            <div class="flex justify-between items-center mt-1.5">
-              <span class="text-[10px] text-gray-400 font-bold">${dateStr}</span>
-              <span class="text-[10px] text-yellow-400 tracking-widest">${starStr}</span>
+          <div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 relative group overflow-hidden flex flex-col justify-end aspect-square" style="${bgStyle}">
+            ${overlay}
+            ${iconDisplay}
+            <button onclick="deleteExpense(${exp.id})" class="absolute top-2 right-2 text-gray-400 hover:text-red-400 bg-white/80 rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-20" title="削除">✕</button>
+            <div class="z-10 relative mt-auto">
+              <p class="text-xs font-bold ${textColor} truncate drop-shadow-md" title="${exp.title}">${titleIcon}${exp.title}</p>
+              <div class="flex justify-between items-center mt-1">
+                <span class="text-[10px] ${dateColor} font-bold drop-shadow-md">${dateStr}</span>
+                <span class="text-[10px] text-yellow-400 tracking-widest drop-shadow-md">${starStr}</span>
+              </div>
             </div>
           </div>
         `;
@@ -746,9 +772,7 @@
       document.querySelector('main').scrollTo(0, 0);
     }
 
-    // 画面初期描画を即座に実行
     updateUI();
-    // 非同期でクラウドデータを取得
     loadDataFromSupabase();
   </script>
 </body>
