@@ -555,8 +555,7 @@
     const reader = new FileReader();
     reader.onload = function(evt) {
       const text = evt.target.result;
-      const lines = text.split('
-');
+      const lines = text.split('\n');
       let newRecords = {};
       
       for(let i=1; i<lines.length; i++){
