@@ -602,7 +602,7 @@
     
     // --- 簡易的な目標ライン計算 (Phase 1: 10/9〜10/31 で 70.0kg -> 67.5kg) ---
     let targetData = [];
-    const startDate = new Date('2026-10-09');
+    const startDate = new Date('2026-10-09T00:00:00');
     const startWeight = 70.0;
     const targetDailyDrop = 2.5 / 23; // 23日間で2.5kg減
     
@@ -612,10 +612,11 @@
       labels.push(md);
       weightData.push(r.w);
       
-      // 目標ラインの計算
-      let currentDate = new Date(dt);
-      let diffDays = Math.max(0, (currentDate - startDate) / (1000 * 60 * 60 * 24));
-      let expectedWeight = startWeight - (targetDailyDrop * diffDays);
+      // 目標ラインの計算 (日付の差分を正確に計算)
+      let currentDate = new Date(dt + 'T00:00:00');
+      let diffDays = (currentDate - startDate) / (1000 * 60 * 60 * 24);
+      // Phase1開始前の日付は70.0kg固定、それ以降は日割りで減少
+      let expectedWeight = diffDays < 0 ? startWeight : (startWeight - (targetDailyDrop * diffDays));
       targetData.push(expectedWeight);
       
       if (r.dose) {
