@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAELUlEQVR4nO3d0W4TQRBE0TLKV4dnvts8RLJM7Jj11u5M1/Q9jwiJ3umrcZAWc9HnVcBev2YPgGwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQEy8fsAXT98+QXL7+Hz5Gg4FldJv6/8U+P4x4Z3ZQ9q2kfYf89kY2/p4PKZzXhBtrxqG2vovpnxQ/RsIwOaN9N2/OzLOKshgbkPFu3hlLOKukjrE9DQU86LqBDDiXoZHfLOqikG+jL2g3FPV1eQAo85Y0SnysyIGWe9WuhT5QakGJP/KncZwkOSMnnfi/6KbIDUvjpK3/++ICUvIPcyW9WCEiZm0ic+dEiASltH1nTvrBOQMrZSsqcWywVkBJ2U3/Ct6wWkGpvqPJs+ywYkKruqeZUpjUDUr1tVZvnKMsGpEo7qzPJ4VYOSDU2V2GG8ywekGbvb+161CEgzdvi8vWoSUCascsO9ahPQBq70Sb1qFVAGrXXPvWoW0A6f7ut6lHDgHTmjrvVo54B6ZxNN6xHbQPS0fvuWY86B6Tjtt62HjUPSEfsvnM9IiDlfA9GTQQkhXwTT01JAZ365W3v1nBqPUFf6ZcUkMo0RD03YQGpQEPUcy8vIE1tiHq+iQxIkxqinkepAWl4Q9TzVHBAGtgQ9fwkOyANaYh6XogPSAX+XrZbej1aIyBlbiJx5keLBKS0fWRN+8I6ASlnKylzbrFUQErYTf0J37JaQKq9ocqz7bNgQKq6p5pTmdYMSPW2VW2eoywbkCrtrM4kh1s5INXYXIUZzrN4QJq9v7XrUYeANG+Ly9ejJgFpxi471KM+AWnsRpvUo1YBadRe+9SjbgHp/O22qkcNA9KZO+5Wj3oGpHM23bAetQ1IR++7Zz3qHJCO23rbetQ8IB2x+871iIDkFdC8HhHQl30dUI8ICKaP2QNU8XWdbPxXYNw9N9xA/9hSBvXc4wb67sVVRDqPCOg5WtmIjzBYCAgWAoKFgGBJCqjPF3sHPWlSQCiIgGAhIFgICBYCgoWAYBkXEC+Pbhd0VtxAsAwNiLePt0s5q9E3EG8fbxdxVnyEwXLR53XKH8zbx9tVPqtpNxBvH28XcGzmh8QovFDNCwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHB8hdT6tqJNNKOmQAAAABJRU5ErkJggg==">
+<link rel="icon" href="data:;base64,=">
 <title>マンジャロ計画 トラッカー</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.2"></script>
@@ -530,13 +532,11 @@
   function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
   function exportCSV() {
-    let csv = "日付,体重,朝ジム,メディカル,生理日,FootFit,用量,体脂肪,骨格筋
-";
+    let csv = "日付,体重,朝ジム,メディカル,生理日,FootFit,用量,体脂肪,骨格筋\n";
     let dates = Object.keys(appData.records).sort();
     dates.forEach(dt => {
       let r = appData.records[dt];
-      csv += `${dt},${r.w},${r.gym?1:0},${r.med?1:0},${r.period?1:0},${r.footfit?1:0},${r.dose||''},${r.fat||''},${r.mus||''}
-`;
+      csv += `${dt},${r.w},${r.gym?1:0},${r.med?1:0},${r.period?1:0},${r.footfit?1:0},${r.dose||''},${r.fat||''},${r.mus||''}\n`;
     });
     
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], {type: 'text/csv;charset=utf-8;'});
