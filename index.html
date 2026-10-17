@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Solo Bloom - ゆとり費アプリ</title>
   
-  <!-- PWA化のためのタグ追加 -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.png">
   <meta name="theme-color" content="#6B9CA3">
@@ -28,7 +27,6 @@
         }
       }
     }
-    // サービスワーカー（PWA）の登録
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(err => console.log('ServiceWorker registration failed: ', err));
     }
@@ -167,8 +165,14 @@
           <h3 class="font-bold text-sm mb-3 text-gray-700 flex items-center gap-2">
             <span class="text-lg">✍️</span> クイック体験記録
           </h3>
-          <div class="space-y-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex gap-2">
+          <div class="space-y-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative">
+            
+            <!-- ウィッシュ実行中の通知バッジ -->
+            <div id="executing-badge" class="hidden absolute -top-3 left-4 bg-aqua text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
+              ウィッシュ実行中
+            </div>
+
+            <div class="flex gap-2 pt-2">
               <select id="expense-icon" class="w-16 bg-gray-50 border border-gray-200 rounded-lg px-2 py-2.5 text-base focus:outline-none focus:border-aqua text-center">
                 <option value="🍽️">🍽️</option><option value="🚄">🚄</option><option value="💎">💎</option>
                 <option value="♨️">♨️</option><option value="💆‍♀️">💆‍♀️</option><option value="🌿">🌿</option>
@@ -337,9 +341,11 @@
     let currentAnnualBudget = 1560000; 
     let wishes = [];
     let expenses = []; 
+
     let currentCategoryFilter = 'All';
     let showUnassignedOnly = false;
     let currentSortOrder = 'newest';
+    let executingWishId = null; // ★ 実行中のウィッシュIDを保持
 
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
@@ -396,14 +402,30 @@
       }
     }
 
+    // 単なる削除（実行せず取り消す）
     async function deleteWish(id) {
-      if (confirm('このウィッシュを削除しますか？')) {
+      if (confirm('このウィッシュを取り消しますか？\n(Stockには送られず削除されます)')) {
         wishes = wishes.filter(w => w.id !== id);
         updateUI();
         if (supabaseClient) {
           try { await supabaseClient.from('wishes').delete().eq('id', id); } catch (e) {}
         }
       }
+    }
+
+    // ★ 新設：ウィッシュからSpendへ移動してプレフィル
+    function moveToSpend(id) {
+      const wish = wishes.find(w => w.id === id);
+      if (!wish) return;
+
+      document.getElementById('expense-icon').value = wish.icon;
+      document.getElementById('expense-title').value = wish.title;
+      document.getElementById('expense-cost').value = wish.cost;
+      
+      executingWishId = id;
+      document.getElementById('executing-badge').classList.remove('hidden');
+
+      switchTab('spend');
     }
 
     async function saveExpense() {
@@ -421,7 +443,6 @@
       btn.disabled = true;
 
       let imageUrl = null;
-
       if (supabaseClient && imageFile) {
         try {
           const fileExt = imageFile.name.split('.').pop();
@@ -437,6 +458,16 @@
       const newExpense = { id: Date.now(), icon, title, cost, stars, image_url: imageUrl, date: new Date().toISOString() };
       expenses.unshift(newExpense);
       
+      // ★ 実行中だったウィッシュを自動消化（Planから削除）
+      if (executingWishId) {
+        wishes = wishes.filter(w => w.id !== executingWishId);
+        if (supabaseClient) {
+          try { await supabaseClient.from('wishes').delete().eq('id', executingWishId); } catch (e) {}
+        }
+        executingWishId = null;
+        document.getElementById('executing-badge').classList.add('hidden');
+      }
+
       document.getElementById('expense-title').value = '';
       document.getElementById('expense-cost').value = '';
       document.getElementById('expense-image').value = '';
@@ -555,7 +586,6 @@
           costLabel = `<span class="text-[8px] mt-0.5 ${overStyle}">¥${(directCost/10000).toFixed(1)}万</span>`;
         }
         
-        // ドラッグ＆ドロップの受け皿になるクラス cylinder-dropzone を追加
         cylindersHTML += `
           <div class="flex flex-col items-center z-10 w-full px-1 cylinder-dropzone rounded-lg transition-all" data-month="${monthNum}">
             <div class="relative w-6 h-20 bg-gray-100 rounded-t-sm rounded-b-xl overflow-hidden shadow-inner border border-gray-200 pointer-events-none">
@@ -608,10 +638,8 @@
       displayWishes.forEach(wish => {
         const monthBg = wish.month ? 'bg-aqua/10 text-aqua border-aqua/30' : 'bg-transparent text-gray-400 border-transparent';
         
-        // カード全体に data-wish-id を付与し、左端のアイコン部分をドラッグハンドルにする
         const cardHTML = `
           <div class="ticket-card rounded-lg flex shadow-sm wish-card" data-wish-id="${wish.id}">
-            <!-- ドラッグハンドル：スマホスクロール干渉防止のため touch-none を付与 -->
             <div class="w-12 bg-aqua text-white rounded-l-lg flex flex-col items-center justify-center border-r border-dashed border-white/50 drag-handle touch-none cursor-grab active:cursor-grabbing" title="ここを指で掴んで上のシリンダーへ運びます">
               <span class="text-xl pointer-events-none">${wish.icon}</span>
             </div>
@@ -623,11 +651,14 @@
                   <p class="text-aqua font-bold text-sm ml-2">¥${wish.cost.toLocaleString()}</p>
                 </div>
               </div>
-              <!-- お守りとしてセレクトボックスも残しておく -->
-              <div class="mt-2 inline-block relative z-20">
+              <div class="mt-2 flex justify-between items-center relative z-20">
                 <select onchange="updateWishMonth(${wish.id}, this.value)" class="text-[10px] font-bold ${monthBg} border rounded px-1 py-0.5 focus:outline-none cursor-pointer transition-colors">
                   ${generateMonthOptions(wish.month)}
                 </select>
+                <!-- ★新設：味わう（実行）ボタン -->
+                <button onclick="moveToSpend(${wish.id})" class="text-[10px] font-bold bg-aqua text-white px-3 py-1 rounded shadow-sm hover:bg-aquaLight transition-colors">
+                  ☕️ 味わう
+                </button>
               </div>
             </div>
           </div>
@@ -729,6 +760,14 @@
     });
 
     function switchTab(tabId) {
+      // 別のタブへ移動した場合は実行中フラグをリセット
+      if (tabId !== 'spend' && executingWishId) {
+        executingWishId = null;
+        document.getElementById('executing-badge').classList.add('hidden');
+        document.getElementById('expense-title').value = '';
+        document.getElementById('expense-cost').value = '';
+      }
+
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById('tab-' + tabId).classList.remove('hidden');
       document.querySelectorAll('.nav-btn').forEach(el => {
@@ -740,7 +779,7 @@
     }
 
     // ==========================================
-    // ✋ 4. ドラッグ＆ドロップ（Touch/Mouse）実装
+    // ✋ 4. ドラッグ＆ドロップ実装
     // ==========================================
     let draggedWishId = null;
     let ghostEl = null;
@@ -748,20 +787,15 @@
     document.getElementById('wish-list').addEventListener('pointerdown', (e) => {
       const handle = e.target.closest('.drag-handle');
       if (!handle) return;
-      
       const card = handle.closest('.wish-card');
       if (!card) return;
-
-      // スマホのスクロールを止める
       e.preventDefault();
       
       draggedWishId = parseInt(card.dataset.wishId);
-      
-      // ゴースト（持ち上げられたカード）の作成
       ghostEl = card.cloneNode(true);
       ghostEl.style.position = 'fixed';
       ghostEl.style.opacity = '0.9';
-      ghostEl.style.pointerEvents = 'none'; // 背後の要素を判定するために必須
+      ghostEl.style.pointerEvents = 'none';
       ghostEl.style.zIndex = '9999';
       ghostEl.style.width = card.offsetWidth + 'px';
       ghostEl.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
@@ -774,23 +808,18 @@
 
     document.addEventListener('pointermove', (e) => {
       if (!ghostEl) return;
-      e.preventDefault(); // スマホでのスクロール干渉を防止
+      e.preventDefault();
       moveGhost(e);
-      
-      // シリンダーのハイライト処理
       document.querySelectorAll('.cylinder-dropzone').forEach(el => el.classList.remove('bg-aqua/20', 'scale-110'));
       const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
       if (dropTarget) {
         const cylinder = dropTarget.closest('.cylinder-dropzone');
-        if (cylinder) {
-          cylinder.classList.add('bg-aqua/20', 'scale-110');
-        }
+        if (cylinder) cylinder.classList.add('bg-aqua/20', 'scale-110');
       }
     }, {passive: false});
 
     document.addEventListener('pointerup', (e) => {
       if (!ghostEl) return;
-      
       const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
       if (dropTarget) {
         const cylinder = dropTarget.closest('.cylinder-dropzone');
@@ -799,8 +828,6 @@
           updateWishMonth(draggedWishId, month);
         }
       }
-      
-      // ハイライト解除と後片付け
       document.querySelectorAll('.cylinder-dropzone').forEach(el => el.classList.remove('bg-aqua/20', 'scale-110'));
       ghostEl.remove();
       ghostEl = null;
@@ -812,8 +839,6 @@
       ghostEl.style.top = e.clientY - ghostEl.offsetHeight / 2 + 'px';
     }
 
-
-    // 初期描画
     updateUI();
     loadDataFromSupabase();
   </script>
