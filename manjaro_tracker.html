@@ -266,6 +266,8 @@
     <div class="card-inner">
       <div class="header">
         <div class="date-title">履歴タイムライン</div>
+        <button class="settings-btn" style="right: auto; left: 0; font-size: 14px; font-weight: bold; color: var(--primary);" onclick="document.getElementById('dateInputNew').click()">＋追加</button>
+        <input type="date" id="dateInputNew" style="visibility: hidden; position: absolute; width: 0; height: 0;" onchange="addNewPastDate(event)">
       </div>
       <div class="timeline-list" id="timelineList">
         <!-- JSで生成 -->
@@ -470,6 +472,23 @@
     renderUI();
   }
 
+  function addNewPastDate(e) {
+    let dt = e.target.value;
+    if (!dt) return;
+    if (!appData.records[dt]) {
+      // Find the closest previous weight or default to 70.0
+      let lastW = 70.0;
+      let dates = Object.keys(appData.records).sort();
+      let prevDates = dates.filter(d => d < dt);
+      if (prevDates.length > 0) {
+        lastW = appData.records[prevDates[prevDates.length-1]].w;
+      }
+      appData.records[dt] = { w: lastW, gym: false, med: false, footfit: false, period: false, dose: null, fat: null, mus: null };
+      saveData();
+    }
+    editPastDate(dt);
+  }
+
   // ---------------------------------------------------
   // InBody & デュアルトラッカー
   // ---------------------------------------------------
@@ -650,7 +669,7 @@
           {
             label: '目標ライン', data: targetData,
             borderColor: '#ffcc00', borderDash: [5, 5], borderWidth: 2,
-            fill: false, pointRadius: 0
+            fill: false, pointRadius: isLandscape ? 3 : 5, pointBackgroundColor: '#ffcc00'
           }
         ]
       },
@@ -658,7 +677,10 @@
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false }, annotation: { annotations: annotations } },
         scales: {
-          y: { grid: { color: '#f2f2f7' }, border: { display: false } },
+          y: { 
+            grid: { color: '#f2f2f7' }, border: { display: false },
+            suggestedMin: 67.0, suggestedMax: 71.0
+          },
           x: { 
             grid: { display: false }, border: { display: false },
             ticks: { maxTicksLimit: isLandscape ? 20 : 7 } 
