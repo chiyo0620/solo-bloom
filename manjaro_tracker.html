@@ -600,11 +600,23 @@
     let weightData = [];
     let annotations = {};
     
+    // --- 簡易的な目標ライン計算 (Phase 1: 10/9〜10/31 で 70.0kg -> 67.5kg) ---
+    let targetData = [];
+    const startDate = new Date('2026-10-09');
+    const startWeight = 70.0;
+    const targetDailyDrop = 2.5 / 23; // 23日間で2.5kg減
+    
     dates.forEach((dt, i) => {
       let r = appData.records[dt];
       let md = dt.substring(5).replace('-','/'); 
       labels.push(md);
       weightData.push(r.w);
+      
+      // 目標ラインの計算
+      let currentDate = new Date(dt);
+      let diffDays = Math.max(0, (currentDate - startDate) / (1000 * 60 * 60 * 24));
+      let expectedWeight = startWeight - (targetDailyDrop * diffDays);
+      targetData.push(expectedWeight);
       
       if (r.dose) {
         annotations[`dose_${i}`] = {
@@ -628,11 +640,18 @@
       type: 'line',
       data: {
         labels: labels,
-        datasets: [{
-          label: '実績', data: weightData,
-          borderColor: '#007aff', backgroundColor: 'rgba(0, 122, 255, 0.1)',
-          fill: true, tension: 0.4, pointRadius: isLandscape ? 3 : 5, pointBackgroundColor: '#fff', pointBorderWidth: 2
-        }]
+        datasets: [
+          {
+            label: '実績', data: weightData,
+            borderColor: '#007aff', backgroundColor: 'rgba(0, 122, 255, 0.1)',
+            fill: true, tension: 0.4, pointRadius: isLandscape ? 3 : 5, pointBackgroundColor: '#fff', pointBorderWidth: 2
+          },
+          {
+            label: '目標ライン', data: targetData,
+            borderColor: '#ffcc00', borderDash: [5, 5], borderWidth: 2,
+            fill: false, pointRadius: 0
+          }
+        ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
