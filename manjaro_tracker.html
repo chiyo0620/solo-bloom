@@ -350,12 +350,12 @@
     const titleEl = document.getElementById('dateSelector');
     const returnBtn = document.getElementById('btnReturnToday');
     if (editingDateStr === systemTodayStr) {
-      titleEl.innerText = `本日 ${formatDateWithDay(systemTodayStr)}`;
+      titleEl.innerText = `本日 ${formatDateWithDay(systemTodayStr)} ▾`;
       titleEl.classList.remove('editing');
       returnBtn.style.display = 'none';
     } else {
       let mdDay = formatDateWithDay(editingDateStr);
-      titleEl.innerText = `${mdDay} (編集中)`;
+      titleEl.innerText = `${mdDay} (編集中) ▾`;
       titleEl.classList.add('editing');
       returnBtn.style.display = 'block';
     }
@@ -606,7 +606,7 @@
       }
       if (r.period) {
         annotations[`period_${i}`] = {
-          type: 'box', xMin: mdDay, xMax: mdDay,
+          type: 'box', xMin: i - 0.5, xMax: i + 0.5,
           backgroundColor: 'rgba(255, 45, 85, 0.2)', borderWidth: 0,
           drawTime: 'beforeDatasetsDraw'
         };
