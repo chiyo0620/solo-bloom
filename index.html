@@ -2,10 +2,17 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Solo Bloom - ゆとり費アプリ</title>
+  
+  <!-- PWA化のためのタグ追加 -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="theme-color" content="#6B9CA3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase クライアント -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     tailwind.config = {
@@ -20,6 +27,10 @@
           }
         }
       }
+    }
+    // サービスワーカー（PWA）の登録
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log('ServiceWorker registration failed: ', err));
     }
   </script>
   <style>
@@ -55,12 +66,12 @@
     }
   </style>
 </head>
-<body class="bg-gray-100 flex justify-center min-h-screen text-textMain font-sans">
+<body class="bg-gray-100 flex justify-center min-h-screen text-textMain font-sans overscroll-none">
 
   <div class="bg-ivory w-full max-w-md h-screen relative shadow-xl overflow-hidden flex flex-col">
     
     <!-- ヘッダー -->
-    <header class="pt-8 pb-3 px-6 bg-ivory z-10 border-b border-gray-200 shrink-0">
+    <header class="pt-10 pb-3 px-6 bg-ivory z-10 border-b border-gray-200 shrink-0">
       <div class="flex items-center justify-center">
         <div>
           <h1 class="text-2xl font-serif text-aqua tracking-widest text-center">Solo Bloom</h1>
@@ -91,8 +102,8 @@
             <h2 class="font-bold text-lg">12連アクア・シリンダー</h2>
             <span id="annual-harmony-status" class="text-[10px] font-bold"></span>
           </div>
-          <p class="text-[10px] text-gray-500 mb-3 leading-tight">カードを割り当てると水が満ちます。枠を超えてあふれた水は、底の管を通って空いている月に均等に注がれます。</p>
-          <div class="overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2">
+          <p class="text-[10px] text-gray-500 mb-3 leading-tight">カードの左側を指で押さえて、上のシリンダーへ引っ張って（ドラッグ）水を満たしましょう。</p>
+          <div class="overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2 relative z-0">
             <div class="flex items-end h-36 bg-white p-3 rounded-xl shadow-inner relative min-w-[640px]" id="cylinder-container"></div>
           </div>
         </div>
@@ -115,7 +126,7 @@
           <div class="flex justify-between items-center border-t border-gray-100 pt-2">
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" id="filter-unassigned" onchange="toggleUnassigned()" class="w-3.5 h-3.5 accent-aqua">
-              <span class="text-[11px] font-bold text-gray-600">未定(配置待ち)のみ</span>
+              <span class="text-[11px] font-bold text-gray-600">未定のみ</span>
             </label>
             <select id="sort-order" onchange="changeSort(this.value)" class="text-[11px] font-bold text-gray-600 bg-transparent focus:outline-none cursor-pointer">
               <option value="newest">登録が新しい順</option>
@@ -125,7 +136,7 @@
           </div>
         </div>
         
-        <div class="space-y-3" id="wish-list"></div>
+        <div class="space-y-3 relative z-10" id="wish-list"></div>
       </div>
 
       <!-- ② Spend タブ -->
@@ -178,7 +189,6 @@
               </select>
             </div>
 
-            <!-- ★新規追加：写真アップロード枠 -->
             <div>
               <label class="block w-full bg-gray-50 border border-gray-200 border-dashed rounded-lg px-3 py-3 text-sm cursor-pointer hover:bg-aqua/5 transition-colors flex items-center justify-center text-gray-500">
                 <span id="file-name-display" class="truncate font-bold">📷 写真を添付する (任意)</span>
@@ -228,7 +238,7 @@
       </button>
     </nav>
 
-    <!-- モーダル（設定） -->
+    <!-- 各種モーダル -->
     <div id="settings-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -255,7 +265,6 @@
       </div>
     </div>
 
-    <!-- モーダル（ウィッシュ追加） -->
     <div id="wish-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -311,7 +320,6 @@
   <script>
     // ==========================================
     // 🔑 1. Supabase の接続設定
-    // ここをご自身のものに書き換えてください！
     // ==========================================
     const SUPABASE_URL = 'https://qdibmtxpgsxmktsynjcc.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkaWJtdHhwZ3N4bWt0c3luamNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDg2ODMsImV4cCI6MjEwNzcyNDY4M30.-n-hO2KwV20kkcfe46TyoyNdUaGat7GKHe1pINKVV3E';
@@ -329,7 +337,6 @@
     let currentAnnualBudget = 1560000; 
     let wishes = [];
     let expenses = []; 
-
     let currentCategoryFilter = 'All';
     let showUnassignedOnly = false;
     let currentSortOrder = 'newest';
@@ -343,22 +350,17 @@
     // ==========================================
     async function loadDataFromSupabase() {
       if (!supabaseClient) return;
-
       try {
         const [budgetRes, wishesRes, expensesRes] = await Promise.all([
           supabaseClient.from('app_settings').select('value').eq('key', 'annual_budget').maybeSingle(),
           supabaseClient.from('wishes').select('*').order('id', { ascending: false }),
           supabaseClient.from('expenses').select('*').order('date', { ascending: false })
         ]);
-
         if (budgetRes?.data?.value) currentAnnualBudget = parseInt(budgetRes.data.value);
         if (wishesRes?.data) wishes = wishesRes.data;
         if (expensesRes?.data) expenses = expensesRes.data;
-
         updateUI();
-      } catch (err) {
-        console.warn('データ取得エラー:', err);
-      }
+      } catch (err) {}
     }
 
     async function saveWish() {
@@ -367,10 +369,7 @@
       const month = document.getElementById('wish-month').value;
       const icon = document.getElementById('wish-icon').value;
 
-      if (!title || cost <= 0) {
-        alert('タイトルと費用（1円以上）を入力してください。');
-        return;
-      }
+      if (!title || cost <= 0) return alert('タイトルと費用（1円以上）を入力してください。');
 
       const tempId = Date.now();
       const newWish = { id: tempId, title, cost, month, icon };
@@ -380,9 +379,7 @@
 
       if (supabaseClient) {
         try {
-          const { data, error } = await supabaseClient.from('wishes').insert([
-            { title, cost, month, icon }
-          ]).select();
+          const { data, error } = await supabaseClient.from('wishes').insert([{ title, cost, month, icon }]).select();
           if (!error && data && data[0]) newWish.id = data[0].id;
         } catch (e) {}
       }
@@ -409,7 +406,6 @@
       }
     }
 
-    // ★ 写真アップロードと体験の記録
     async function saveExpense() {
       const icon = document.getElementById('expense-icon').value;
       const title = document.getElementById('expense-title').value.trim();
@@ -418,54 +414,29 @@
       const imageFile = document.getElementById('expense-image').files[0];
       const btn = document.getElementById('save-expense-btn');
 
-      if (!title || cost <= 0) {
-        alert('体験メモと金額を正しく入力してください。');
-        return;
-      }
+      if (!title || cost <= 0) return alert('体験メモと金額を正しく入力してください。');
 
-      // ボタンをローディング状態に
       const originalBtnText = btn.innerHTML;
       btn.innerHTML = '送信中...';
       btn.disabled = true;
 
       let imageUrl = null;
 
-      // 写真が選ばれていたら Storage へアップロード
       if (supabaseClient && imageFile) {
         try {
           const fileExt = imageFile.name.split('.').pop();
           const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-          
-          const { data: uploadData, error: uploadError } = await supabaseClient.storage
-            .from('solo-bloom-images')
-            .upload(fileName, imageFile);
-
+          const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('solo-bloom-images').upload(fileName, imageFile);
           if (!uploadError) {
-            const { data: publicUrlData } = supabaseClient.storage
-              .from('solo-bloom-images')
-              .getPublicUrl(fileName);
+            const { data: publicUrlData } = supabaseClient.storage.from('solo-bloom-images').getPublicUrl(fileName);
             imageUrl = publicUrlData.publicUrl;
-          } else {
-            console.error('画像アップロードエラー:', uploadError);
           }
-        } catch (e) {
-          console.error('画像処理エラー:', e);
-        }
+        } catch (e) {}
       }
 
-      const newExpense = {
-        id: Date.now(),
-        icon,
-        title,
-        cost,
-        stars,
-        image_url: imageUrl,
-        date: new Date().toISOString()
-      };
-
+      const newExpense = { id: Date.now(), icon, title, cost, stars, image_url: imageUrl, date: new Date().toISOString() };
       expenses.unshift(newExpense);
       
-      // フォームリセット
       document.getElementById('expense-title').value = '';
       document.getElementById('expense-cost').value = '';
       document.getElementById('expense-image').value = '';
@@ -476,15 +447,10 @@
       updateUI();
       switchTab('stock');
 
-      // データベースへ保存
       if (supabaseClient) {
         try {
-          const { data, error } = await supabaseClient.from('expenses').insert([{
-            icon, title, cost, stars, date: newExpense.date, image_url: imageUrl
-          }]).select();
-          if (!error && data && data[0]) {
-            newExpense.id = data[0].id;
-          }
+          const { data, error } = await supabaseClient.from('expenses').insert([{ icon, title, cost, stars, date: newExpense.date, image_url: imageUrl }]).select();
+          if (!error && data && data[0]) newExpense.id = data[0].id;
         } catch (e) {}
       }
     }
@@ -506,15 +472,13 @@
         updateUI();
         closeSettingsModal();
         if (supabaseClient) {
-          try {
-            await supabaseClient.from('app_settings').upsert({ key: 'annual_budget', value: JSON.stringify(currentAnnualBudget) });
-          } catch (e) {}
+          try { await supabaseClient.from('app_settings').upsert({ key: 'annual_budget', value: JSON.stringify(currentAnnualBudget) }); } catch (e) {}
         }
       }
     }
 
     // ==========================================
-    // 🎨 3. UIレンダリング & 連通管ロジック
+    // 🎨 3. UIレンダリング & ドラッグ＆ドロップ実装
     // ==========================================
     function updateUI() {
       document.getElementById('badge-monthly-budget').textContent = `¥${Math.floor(currentAnnualBudget / 12).toLocaleString()}`;
@@ -590,26 +554,26 @@
           const overStyle = directCost > monthlyBudget ? 'text-red-400 font-extrabold' : 'text-gray-500 font-bold';
           costLabel = `<span class="text-[8px] mt-0.5 ${overStyle}">¥${(directCost/10000).toFixed(1)}万</span>`;
         }
+        
+        // ドラッグ＆ドロップの受け皿になるクラス cylinder-dropzone を追加
         cylindersHTML += `
-          <div class="flex flex-col items-center z-10 w-full px-1">
-            <div class="relative w-6 h-20 bg-gray-100 rounded-t-sm rounded-b-xl overflow-hidden shadow-inner border border-gray-200">
-              <div class="water-fill absolute bottom-0 w-full rounded-b-xl" style="height: ${waterPercent}%;"></div>
+          <div class="flex flex-col items-center z-10 w-full px-1 cylinder-dropzone rounded-lg transition-all" data-month="${monthNum}">
+            <div class="relative w-6 h-20 bg-gray-100 rounded-t-sm rounded-b-xl overflow-hidden shadow-inner border border-gray-200 pointer-events-none">
+              <div class="water-fill absolute bottom-0 w-full rounded-b-xl pointer-events-none" style="height: ${waterPercent}%;"></div>
             </div>
-            <span class="text-[9px] mt-1 font-bold text-gray-400">${monthNum}月</span>
+            <span class="text-[9px] mt-1 font-bold text-gray-400 pointer-events-none">${monthNum}月</span>
             ${costLabel}
           </div>
         `;
       }
-      cylinderContainer.innerHTML = '<div class="absolute bottom-6 left-4 right-4 h-2 bg-aquaLight/40 rounded-full"></div>' + 
+      cylinderContainer.innerHTML = '<div class="absolute bottom-6 left-4 right-4 h-2 bg-aquaLight/40 rounded-full pointer-events-none"></div>' + 
                                     '<div class="flex justify-between w-full z-10 px-1">' + cylindersHTML + '</div>';
 
       const harmonyStatus = document.getElementById('annual-harmony-status');
       if (annualTotalCost <= currentAnnualBudget) {
-        const remaining = currentAnnualBudget - annualTotalCost;
-        harmonyStatus.innerHTML = `年間調和: <span class="text-aqua">安定 (残 ¥${remaining.toLocaleString()})</span>`;
+        harmonyStatus.innerHTML = `年間調和: <span class="text-aqua">安定</span>`;
       } else {
-        const over = annualTotalCost - currentAnnualBudget;
-        harmonyStatus.innerHTML = `年間調和: <span class="text-red-400">枠越え (¥${over.toLocaleString()} オーバー)</span>`;
+        harmonyStatus.innerHTML = `年間調和: <span class="text-red-400">枠越え</span>`;
       }
     }
 
@@ -636,30 +600,34 @@
         let options = `<option value="">未定</option>`;
         for(let m=1; m<=12; m++) {
           const isSelected = selectedMonth == m ? 'selected' : '';
-          options += `<option value="${m}" ${isSelected}>${m}月に企てる</option>`;
+          options += `<option value="${m}" ${isSelected}>${m}月</option>`;
         }
         return options;
       };
 
       displayWishes.forEach(wish => {
         const monthBg = wish.month ? 'bg-aqua/10 text-aqua border-aqua/30' : 'bg-transparent text-gray-400 border-transparent';
+        
+        // カード全体に data-wish-id を付与し、左端のアイコン部分をドラッグハンドルにする
         const cardHTML = `
-          <div class="ticket-card rounded-lg flex shadow-sm">
-            <div class="w-12 bg-aqua text-white rounded-l-lg flex flex-col items-center justify-center border-r border-dashed border-white/50">
-              <span class="text-xl">${wish.icon}</span>
+          <div class="ticket-card rounded-lg flex shadow-sm wish-card" data-wish-id="${wish.id}">
+            <!-- ドラッグハンドル：スマホスクロール干渉防止のため touch-none を付与 -->
+            <div class="w-12 bg-aqua text-white rounded-l-lg flex flex-col items-center justify-center border-r border-dashed border-white/50 drag-handle touch-none cursor-grab active:cursor-grabbing" title="ここを指で掴んで上のシリンダーへ運びます">
+              <span class="text-xl pointer-events-none">${wish.icon}</span>
             </div>
             <div class="p-3 flex-1 relative">
               <button onclick="deleteWish(${wish.id})" class="absolute top-2 right-2 text-gray-300 hover:text-red-400 text-sm leading-none p-1" title="削除">✕</button>
-              <div class="pr-6">
+              <div class="pr-6 pointer-events-none">
                 <div class="flex justify-between items-start">
                   <h3 class="font-bold text-sm text-gray-800 leading-tight">${wish.title}</h3>
                   <p class="text-aqua font-bold text-sm ml-2">¥${wish.cost.toLocaleString()}</p>
                 </div>
-                <div class="mt-2 inline-block">
-                  <select onchange="updateWishMonth(${wish.id}, this.value)" class="text-[10px] font-bold ${monthBg} border rounded px-1 py-0.5 focus:outline-none cursor-pointer transition-colors">
-                    ${generateMonthOptions(wish.month)}
-                  </select>
-                </div>
+              </div>
+              <!-- お守りとしてセレクトボックスも残しておく -->
+              <div class="mt-2 inline-block relative z-20">
+                <select onchange="updateWishMonth(${wish.id}, this.value)" class="text-[10px] font-bold ${monthBg} border rounded px-1 py-0.5 focus:outline-none cursor-pointer transition-colors">
+                  ${generateMonthOptions(wish.month)}
+                </select>
               </div>
             </div>
           </div>
@@ -714,7 +682,6 @@
         const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
         const starStr = '★'.repeat(exp.stars) + '☆'.repeat(5 - exp.stars);
         
-        // 写真がある場合は背景画像をセットし、文字色を調整
         const bgStyle = exp.image_url ? `background-image: url('${exp.image_url}'); background-size: cover; background-position: center;` : '';
         const overlay = exp.image_url ? '<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-0"></div>' : '';
         const textColor = exp.image_url ? 'text-white' : 'text-gray-800';
@@ -772,6 +739,81 @@
       document.querySelector('main').scrollTo(0, 0);
     }
 
+    // ==========================================
+    // ✋ 4. ドラッグ＆ドロップ（Touch/Mouse）実装
+    // ==========================================
+    let draggedWishId = null;
+    let ghostEl = null;
+
+    document.getElementById('wish-list').addEventListener('pointerdown', (e) => {
+      const handle = e.target.closest('.drag-handle');
+      if (!handle) return;
+      
+      const card = handle.closest('.wish-card');
+      if (!card) return;
+
+      // スマホのスクロールを止める
+      e.preventDefault();
+      
+      draggedWishId = parseInt(card.dataset.wishId);
+      
+      // ゴースト（持ち上げられたカード）の作成
+      ghostEl = card.cloneNode(true);
+      ghostEl.style.position = 'fixed';
+      ghostEl.style.opacity = '0.9';
+      ghostEl.style.pointerEvents = 'none'; // 背後の要素を判定するために必須
+      ghostEl.style.zIndex = '9999';
+      ghostEl.style.width = card.offsetWidth + 'px';
+      ghostEl.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+      ghostEl.style.transform = 'scale(1.05) rotate(2deg)';
+      ghostEl.style.transition = 'transform 0.1s ease';
+      
+      document.body.appendChild(ghostEl);
+      moveGhost(e);
+    });
+
+    document.addEventListener('pointermove', (e) => {
+      if (!ghostEl) return;
+      e.preventDefault(); // スマホでのスクロール干渉を防止
+      moveGhost(e);
+      
+      // シリンダーのハイライト処理
+      document.querySelectorAll('.cylinder-dropzone').forEach(el => el.classList.remove('bg-aqua/20', 'scale-110'));
+      const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
+      if (dropTarget) {
+        const cylinder = dropTarget.closest('.cylinder-dropzone');
+        if (cylinder) {
+          cylinder.classList.add('bg-aqua/20', 'scale-110');
+        }
+      }
+    }, {passive: false});
+
+    document.addEventListener('pointerup', (e) => {
+      if (!ghostEl) return;
+      
+      const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
+      if (dropTarget) {
+        const cylinder = dropTarget.closest('.cylinder-dropzone');
+        if (cylinder) {
+          const month = cylinder.dataset.month;
+          updateWishMonth(draggedWishId, month);
+        }
+      }
+      
+      // ハイライト解除と後片付け
+      document.querySelectorAll('.cylinder-dropzone').forEach(el => el.classList.remove('bg-aqua/20', 'scale-110'));
+      ghostEl.remove();
+      ghostEl = null;
+      draggedWishId = null;
+    });
+
+    function moveGhost(e) {
+      ghostEl.style.left = e.clientX - ghostEl.offsetWidth / 2 + 'px';
+      ghostEl.style.top = e.clientY - ghostEl.offsetHeight / 2 + 'px';
+    }
+
+
+    // 初期描画
     updateUI();
     loadDataFromSupabase();
   </script>
