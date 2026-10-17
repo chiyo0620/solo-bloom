@@ -161,16 +161,27 @@
           <div id="spend-proposal" class="text-sm text-gray-600 leading-relaxed min-h-[3rem]"></div>
         </div>
 
-        <div>
+        <!-- ★新設：味わい中（記録待ち）リスト -->
+        <div id="spending-section" class="mb-8" style="display: none;">
+          <h3 class="font-bold text-sm mb-3 text-gray-700 flex items-center gap-2">
+            <span class="text-lg">☕️</span> 味わい中（記録待ち）
+          </h3>
+          <div id="spending-list" class="space-y-2"></div>
+        </div>
+
+        <div id="quick-expense-form">
           <h3 class="font-bold text-sm mb-3 text-gray-700 flex items-center gap-2">
             <span class="text-lg">✍️</span> クイック体験記録
           </h3>
           <div class="space-y-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative">
             
-            <!-- ウィッシュ実行中の通知バッジ -->
             <div id="executing-badge" class="hidden absolute -top-3 left-4 bg-aqua text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
-              ウィッシュ実行中
+              記録の仕上げ中
             </div>
+            <!-- 編集キャンセルボタン -->
+            <button onclick="cancelEditSpending()" id="cancel-executing-btn" class="hidden absolute -top-3 right-4 bg-gray-200 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded hover:bg-gray-300 shadow-sm transition-colors">
+              ✕ やめる
+            </button>
 
             <div class="flex gap-2 pt-2">
               <select id="expense-icon" class="w-16 bg-gray-50 border border-gray-200 rounded-lg px-2 py-2.5 text-base focus:outline-none focus:border-aqua text-center">
@@ -345,7 +356,7 @@
     let currentCategoryFilter = 'All';
     let showUnassignedOnly = false;
     let currentSortOrder = 'newest';
-    let executingWishId = null; // ★ 実行中のウィッシュIDを保持
+    let executingWishId = null; 
 
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
@@ -402,7 +413,7 @@
       }
     }
 
-    // 単なる削除（実行せず取り消す）
+    // 単なる削除（Planタブの ✕ ボタン用）
     async function deleteWish(id) {
       if (confirm('このウィッシュを取り消しますか？\n(Stockには送られず削除されます)')) {
         wishes = wishes.filter(w => w.id !== id);
@@ -413,8 +424,21 @@
       }
     }
 
-    // ★ 新設：ウィッシュからSpendへ移動してプレフィル
-    function moveToSpend(id) {
+    // ★ 新設：PlanからSpendの記録待ちリストへ移動
+    function markAsSpending(id) {
+      const wish = wishes.find(w => w.id === id);
+      if (wish) {
+        wish.month = 'spending'; // 状態を「実行中」に変更
+        updateUI();
+        if (supabaseClient) {
+          supabaseClient.from('wishes').update({ month: 'spending' }).eq('id', id).then();
+        }
+        switchTab('spend'); // Spendタブへ移動
+      }
+    }
+
+    // ★ 新設：Spendタブのリストから入力フォームへセット
+    function editSpending(id) {
       const wish = wishes.find(w => w.id === id);
       if (!wish) return;
 
@@ -424,8 +448,19 @@
       
       executingWishId = id;
       document.getElementById('executing-badge').classList.remove('hidden');
+      document.getElementById('cancel-executing-btn').classList.remove('hidden');
 
-      switchTab('spend');
+      // フォームまでスクロール
+      document.getElementById('quick-expense-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // 編集キャンセル
+    function cancelEditSpending() {
+      executingWishId = null;
+      document.getElementById('executing-badge').classList.add('hidden');
+      document.getElementById('cancel-executing-btn').classList.add('hidden');
+      document.getElementById('expense-title').value = '';
+      document.getElementById('expense-cost').value = '';
     }
 
     async function saveExpense() {
@@ -464,12 +499,12 @@
         if (supabaseClient) {
           try { await supabaseClient.from('wishes').delete().eq('id', executingWishId); } catch (e) {}
         }
-        executingWishId = null;
-        document.getElementById('executing-badge').classList.add('hidden');
+        cancelEditSpending(); // フォームとフラグをリセット
+      } else {
+        document.getElementById('expense-title').value = '';
+        document.getElementById('expense-cost').value = '';
       }
 
-      document.getElementById('expense-title').value = '';
-      document.getElementById('expense-cost').value = '';
       document.getElementById('expense-image').value = '';
       document.getElementById('file-name-display').textContent = '📷 写真を添付する (任意)';
       btn.innerHTML = originalBtnText;
@@ -542,6 +577,7 @@
       let annualTotalCost = 0;
 
       for (let i = 1; i <= 12; i++) {
+        // ★ 'spending' になったものはシリンダー計算から除外される
         const monthCost = wishes.filter(w => parseInt(w.month) === i).reduce((sum, w) => sum + w.cost, 0);
         directCosts[i-1] = monthCost;
         annualTotalCost += monthCost;
@@ -612,6 +648,7 @@
       listContainer.innerHTML = ''; 
 
       let displayWishes = wishes.filter(w => {
+        if (w.month === 'spending') return false; // ★ 実行待ちのものはPlanから非表示
         if (currentCategoryFilter !== 'All' && w.icon !== currentCategoryFilter) return false;
         if (showUnassignedOnly && w.month !== '') return false;
         return true;
@@ -655,8 +692,8 @@
                 <select onchange="updateWishMonth(${wish.id}, this.value)" class="text-[10px] font-bold ${monthBg} border rounded px-1 py-0.5 focus:outline-none cursor-pointer transition-colors">
                   ${generateMonthOptions(wish.month)}
                 </select>
-                <!-- ★新設：味わう（実行）ボタン -->
-                <button onclick="moveToSpend(${wish.id})" class="text-[10px] font-bold bg-aqua text-white px-3 py-1 rounded shadow-sm hover:bg-aquaLight transition-colors">
+                <!-- ★変更：味わうボタンで Spendリスト へ移動 -->
+                <button onclick="markAsSpending(${wish.id})" class="text-[10px] font-bold bg-aqua text-white px-3 py-1 rounded shadow-sm hover:bg-aquaLight transition-colors">
                   ☕️ 味わう
                 </button>
               </div>
@@ -682,12 +719,42 @@
       const remaining = Math.max(0, monthlyBudget - totalSpent);
       document.getElementById('spend-remaining').textContent = `残枠: ¥${remaining.toLocaleString()}`;
 
+      // ★新設：味わい中（記録待ち）の表示
+      const spendingWishes = wishes.filter(w => w.month === 'spending');
+      const spendingSection = document.getElementById('spending-section');
+      const spendingList = document.getElementById('spending-list');
+      spendingList.innerHTML = '';
+
+      if (spendingWishes.length > 0) {
+        spendingSection.style.display = 'block';
+        spendingWishes.forEach(wish => {
+          const cardHTML = `
+            <div class="bg-white border border-aqua/30 rounded-lg p-3 shadow-sm flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="text-2xl">${wish.icon}</div>
+                <div>
+                  <p class="text-xs font-bold text-gray-800">${wish.title}</p>
+                  <p class="text-[10px] text-aqua font-bold">¥${wish.cost.toLocaleString()}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="editSpending(${wish.id})" class="text-[10px] bg-aqua/10 text-aqua font-bold px-2 py-1.5 rounded hover:bg-aqua/20 transition-colors">📝 仕上げる</button>
+                <button onclick="deleteWish(${wish.id})" class="text-[10px] text-gray-400 hover:text-red-400 p-2" title="やめる（削除）">✕</button>
+              </div>
+            </div>
+          `;
+          spendingList.insertAdjacentHTML('beforeend', cardHTML);
+        });
+      } else {
+        spendingSection.style.display = 'none';
+      }
+
       generateProposal();
     }
 
     function generateProposal() {
       const proposalEl = document.getElementById('spend-proposal');
-      const candidates = wishes.filter(w => !w.month || parseInt(w.month) === currentMonth);
+      const candidates = wishes.filter(w => w.month !== 'spending' && (!w.month || parseInt(w.month) === currentMonth));
       if (candidates.length > 0) {
         const wish = candidates[Math.floor(Math.random() * candidates.length)];
         proposalEl.innerHTML = `今週末、空き時間がありますね。<br>ウィッシュリストの<strong class="text-aqua">「${wish.icon} ${wish.title}」</strong>を実行して、日常をリフレッシュしませんか？`;
@@ -760,13 +827,7 @@
     });
 
     function switchTab(tabId) {
-      // 別のタブへ移動した場合は実行中フラグをリセット
-      if (tabId !== 'spend' && executingWishId) {
-        executingWishId = null;
-        document.getElementById('executing-badge').classList.add('hidden');
-        document.getElementById('expense-title').value = '';
-        document.getElementById('expense-cost').value = '';
-      }
+      if (tabId !== 'spend' && executingWishId) cancelEditSpending();
 
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById('tab-' + tabId).classList.remove('hidden');
