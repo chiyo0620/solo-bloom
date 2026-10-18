@@ -100,7 +100,7 @@
             <h2 class="font-bold text-lg">12連アクア・シリンダー</h2>
             <span id="annual-harmony-status" class="text-[10px] font-bold"></span>
           </div>
-          <p class="text-[10px] text-gray-500 mb-3 leading-tight">カードを上のシリンダーへ引っ張って（ドラッグ）水を満たしましょう。過去の月はフタがされています。</p>
+          <p class="text-[10px] text-gray-500 mb-3 leading-tight">カードの左側を指で押さえて、上のシリンダーへ引っ張って（ドラッグ）水を満たしましょう。</p>
           <div class="overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2 relative z-0">
             <div class="flex items-end h-36 bg-white p-3 rounded-xl shadow-inner relative min-w-[640px]" id="cylinder-container"></div>
           </div>
@@ -202,10 +202,9 @@
             </div>
 
             <div>
-              <!-- ★ iPhone対策：画像形式（JPEG等）への自動変換を促す accept 設定を追加 -->
               <label class="block w-full bg-gray-50 border border-gray-200 border-dashed rounded-lg px-3 py-3 text-sm cursor-pointer hover:bg-aqua/5 transition-colors flex items-center justify-center text-gray-500">
-                <span id="file-name-display" class="truncate font-bold">📷 写真を添付する (任意)</span>
-                <input type="file" id="expense-image" accept="image/jpeg, image/png, image/webp, image/*" class="hidden" onchange="document.getElementById('file-name-display').textContent = this.files[0] ? this.files[0].name : '📷 写真を添付する (任意)'">
+                <span id="file-name-display" class="truncate font-bold">📷 写真を添付する (自動で軽量化されます)</span>
+                <input type="file" id="expense-image" accept="image/jpeg, image/png, image/webp, image/heic, image/*" class="hidden" onchange="document.getElementById('file-name-display').textContent = this.files[0] ? this.files[0].name : '📷 写真を添付する (自動で軽量化されます)'">
               </label>
             </div>
 
@@ -230,7 +229,6 @@
         </div>
 
         <h3 class="font-bold text-lg mb-4 text-gray-800">マイ・コレクション</h3>
-        
         <div class="grid grid-cols-2 gap-3" id="stock-gallery"></div>
       </div>
     </main>
@@ -448,7 +446,51 @@
       document.getElementById('expense-cost').value = '';
     }
 
-    // ★ 修正：画像保存時の処理を強化
+    // ★ 新設：画像をブラウザ内でリサイズ・圧縮する処理（軽量化）
+    function compressImage(file, maxWidth, maxHeight, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > maxWidth) {
+                height = Math.round(height *= maxWidth / width);
+                width = maxWidth;
+              }
+            } else {
+              if (height > maxHeight) {
+                width = Math.round(width *= maxHeight / height);
+                height = maxHeight;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error('画像の圧縮に失敗しました'));
+              }
+            }, 'image/jpeg', quality);
+          };
+          img.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
+        };
+        reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました'));
+      });
+    }
+
+    // ★ 修正：画像圧縮処理を組み込んだ保存関数
     async function saveExpense() {
       const icon = document.getElementById('expense-icon').value;
       const title = document.getElementById('expense-title').value.trim();
@@ -460,24 +502,26 @@
       if (!title || cost <= 0) return alert('体験メモと金額を正しく入力してください。');
 
       const originalBtnText = btn.innerHTML;
-      btn.innerHTML = '送信中...';
+      btn.innerHTML = '圧縮中...';
       btn.disabled = true;
 
       let imageUrl = null;
       
-      // ★ iPhone対策：画像アップロードの確実性を向上
+      // 画像が選択されていれば、圧縮してアップロード
       if (supabaseClient && imageFile) {
         try {
-          const fileExt = imageFile.name.split('.').pop().toLowerCase();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+          // 最大1200px、画質70%の軽量JPEGに自動変換
+          const compressedBlob = await compressImage(imageFile, 1200, 1200, 0.7);
           
-          // iPhoneなどからのアップロード時に確実に画像として認識させる
-          const contentType = imageFile.type || (fileExt === 'png' ? 'image/png' : 'image/jpeg');
-
+          btn.innerHTML = '送信中...'; // 圧縮が終わったら送信ステータスに
+          
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+          
+          // Blob（圧縮データ）をアップロード
           const { data: uploadData, error: uploadError } = await supabaseClient.storage
             .from('solo-bloom-images')
-            .upload(fileName, imageFile, {
-              contentType: contentType,
+            .upload(fileName, compressedBlob, {
+              contentType: 'image/jpeg',
               upsert: false
             });
 
@@ -485,14 +529,13 @@
             const { data: publicUrlData } = supabaseClient.storage.from('solo-bloom-images').getPublicUrl(fileName);
             imageUrl = publicUrlData.publicUrl;
           } else {
-            // エラー時はアラートを出して処理を止める
-            alert('画像のアップロードに失敗しました。容量が大きいか、通信が不安定な可能性があります。\n詳細: ' + uploadError.message);
+            alert('画像のアップロードに失敗しました。\n詳細: ' + uploadError.message);
             btn.innerHTML = originalBtnText;
             btn.disabled = false;
             return;
           }
         } catch (e) {
-          alert('画像の処理中にエラーが発生しました。');
+          alert('画像の処理中にエラーが発生しました。\n詳細: ' + e.message);
           btn.innerHTML = originalBtnText;
           btn.disabled = false;
           return;
@@ -514,7 +557,7 @@
       }
 
       document.getElementById('expense-image').value = '';
-      document.getElementById('file-name-display').textContent = '📷 写真を添付する (任意)';
+      document.getElementById('file-name-display').textContent = '📷 写真を添付する (自動で軽量化されます)';
       btn.innerHTML = originalBtnText;
       btn.disabled = false;
       
@@ -552,7 +595,7 @@
     }
 
     // ==========================================
-    // 🎨 3. UIレンダリング & 連通管ロジック（過去月ロック対応）
+    // 🎨 3. UIレンダリング & 連通管ロジック
     // ==========================================
     function updateUI() {
       document.getElementById('badge-monthly-budget').textContent = `¥${Math.floor(currentAnnualBudget / 12).toLocaleString()}`;
