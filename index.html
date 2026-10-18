@@ -175,7 +175,7 @@
             <div id="executing-badge" class="hidden absolute -top-3 left-4 bg-aqua text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
               記録の仕上げ中
             </div>
-            <button onclick="cancelEditSpending()" id="cancel-executing-btn" class="hidden absolute -top-3 right-4 bg-gray-200 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded hover:bg-gray-300 shadow-sm transition-colors">
+            <button type="button" onclick="cancelEditSpending()" id="cancel-executing-btn" class="hidden absolute -top-3 right-4 bg-gray-200 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded active:bg-gray-300 shadow-sm transition-colors">
               ✕ やめる
             </button>
 
@@ -203,13 +203,14 @@
             </div>
 
             <div>
-              <label class="block w-full bg-gray-50 border border-gray-200 border-dashed rounded-lg px-3 py-3 text-sm cursor-pointer hover:bg-aqua/5 transition-colors flex items-center justify-center text-gray-500">
+              <label class="block w-full bg-gray-50 border border-gray-200 border-dashed rounded-lg px-3 py-3 text-sm cursor-pointer active:bg-aqua/5 transition-colors flex items-center justify-center text-gray-500">
                 <span id="file-name-display" class="truncate font-bold">📷 写真を添付する (自動で軽量化されます)</span>
                 <input type="file" id="expense-image" accept="image/jpeg, image/png, image/webp, image/heic, image/*" class="hidden" onchange="document.getElementById('file-name-display').textContent = this.files[0] ? this.files[0].name : '📷 写真を添付する (自動で軽量化されます)'">
               </label>
             </div>
 
-            <button onclick="saveExpense()" class="w-full bg-aqua text-white mt-1 py-3 rounded-lg text-sm font-bold shadow hover:bg-aquaLight transition-colors flex items-center justify-center gap-2" id="save-expense-btn">
+            <!-- スマホ用に type="button" と active:bg-aquaLight に変更 -->
+            <button type="button" onclick="saveExpense()" class="w-full bg-aqua text-white mt-1 py-3 rounded-lg text-sm font-bold shadow active:bg-aquaLight transition-colors flex items-center justify-center gap-2" id="save-expense-btn">
               <span>豊かな余韻（Stock）へ送る</span>
             </button>
           </div>
@@ -255,7 +256,7 @@
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-base text-gray-800">年間のゆとり費設定</h3>
-          <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+          <button type="button" onclick="closeSettingsModal()" class="text-gray-400 active:text-gray-600 text-lg font-bold">✕</button>
         </div>
         <div class="space-y-4">
           <div>
@@ -271,8 +272,8 @@
           </div>
         </div>
         <div class="mt-6 flex gap-2">
-          <button onclick="closeSettingsModal()" class="w-1/2 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">キャンセル</button>
-          <button onclick="saveAnnualBudget()" class="w-1/2 py-2 text-xs font-bold text-white bg-aqua rounded-lg hover:bg-aquaLight shadow">保存する</button>
+          <button type="button" onclick="closeSettingsModal()" class="w-1/2 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg active:bg-gray-200">キャンセル</button>
+          <button type="button" onclick="saveAnnualBudget()" class="w-1/2 py-2 text-xs font-bold text-white bg-aqua rounded-lg active:bg-aquaLight shadow">保存する</button>
         </div>
       </div>
     </div>
@@ -282,19 +283,19 @@
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-base text-gray-800">新しいウィッシュを企てる</h3>
-          <button onclick="closeWishModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+          <button type="button" onclick="closeWishModal()" class="text-gray-400 active:text-gray-600 text-lg font-bold">✕</button>
         </div>
         <div class="space-y-4">
           <div>
             <label class="block text-[11px] font-bold text-gray-600 mb-1">体験・アイテム名</label>
-            <input type="text" id="wish-title" placeholder="例：極上ヘッドスパ" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-aqua">
+            <input type="text" id="wish-title" placeholder="例：青森・錦石ひろいの旅" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-aqua">
           </div>
           <div class="flex gap-2">
             <div class="flex-1">
               <label class="block text-[11px] font-bold text-gray-600 mb-1">見込み費用（円）</label>
               <div class="relative">
                 <span class="absolute left-3 top-2 text-gray-400 text-sm">¥</span>
-                <input type="number" id="wish-cost" placeholder="18000" class="w-full bg-white border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-aqua" step="1000">
+                <input type="number" id="wish-cost" placeholder="85000" class="w-full bg-white border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-aqua" step="1000">
               </div>
             </div>
             <div class="w-24">
@@ -314,8 +315,8 @@
           </div>
         </div>
         <div class="mt-6 flex gap-2">
-          <button onclick="closeWishModal()" class="w-1/2 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">キャンセル</button>
-          <button onclick="saveWish()" class="w-1/2 py-2 text-xs font-bold text-white bg-aqua rounded-lg hover:bg-aquaLight shadow">リストに追加</button>
+          <button type="button" onclick="closeWishModal()" class="w-1/2 py-2 text-xs font-bold text-gray-500 bg-gray-100 rounded-lg active:bg-gray-200">キャンセル</button>
+          <button type="button" onclick="saveWish()" class="w-1/2 py-2 text-xs font-bold text-white bg-aqua rounded-lg active:bg-aquaLight shadow">リストに追加</button>
         </div>
       </div>
     </div>
@@ -349,6 +350,7 @@
     let showUnassignedOnly = false;
     let currentSortOrder = 'newest';
     let executingWishId = null; 
+    
     let wishes = [
       { id: 1, title: '糸魚川・翡翠探しの旅', cost: 45000, icon: '💎', month: currentMonth.toString() },
       { id: 2, title: '極上ヘッドスパ', cost: 18000, icon: '🌿', month: currentMonth <= 11 ? (currentMonth + 1).toString() : '' },
@@ -418,15 +420,24 @@
       }
     }
 
+    // ★ 修正：iOSで処理が止まらないように、タブを移動してから非同期でUIを更新する
     function markAsSpending(id) {
       const wish = wishes.find(w => w.id === id);
       if (wish) {
         wish.month = 'spending'; 
-        updateUI();
+        
+        // 1. 先にタブを切り替える（iOSのイベントキャンセル回避）
+        switchTab('spend'); 
+        
+        // 2. わずかに遅延させて画面を書き換える
+        setTimeout(() => {
+          updateUI();
+        }, 50);
+
+        // 3. 裏でSupabaseへ保存
         if (supabaseClient) {
           supabaseClient.from('wishes').update({ month: 'spending' }).eq('id', id).then();
         }
-        switchTab('spend'); 
       }
     }
 
@@ -494,6 +505,7 @@
       });
     }
 
+    // ★ 修正：Stockへの送信時もiOSのフリーズ回避処理を適用
     async function saveExpense() {
       const icon = document.getElementById('expense-icon').value;
       const title = document.getElementById('expense-title').value.trim();
@@ -562,8 +574,11 @@
       btn.innerHTML = originalBtnText;
       btn.disabled = false;
       
-      updateUI();
+      // ★ 修正：タブ移動を先に行い、画面の更新を遅延させる
       switchTab('stock');
+      setTimeout(() => {
+        updateUI();
+      }, 50);
 
       if (supabaseClient) {
         try {
@@ -794,7 +809,8 @@
                 <select onchange="updateWishMonth(${wish.id}, this.value)" class="text-[10px] font-bold ${monthBg} border rounded px-1 py-0.5 focus:outline-none cursor-pointer transition-colors">
                   ${generateMonthOptions(wish.month)}
                 </select>
-                <button onclick="markAsSpending(${wish.id})" class="text-[10px] font-bold bg-aqua text-white px-3 py-1 rounded shadow-sm hover:bg-aquaLight transition-colors">
+                <!-- ★ 修正：iOS特有のホバー（ダブルタップ）バグを防ぐため type="button" と active:bg-aquaLight を指定 -->
+                <button type="button" onclick="markAsSpending(${wish.id})" class="text-[10px] font-bold bg-aqua text-white px-3 py-1 rounded shadow-sm active:bg-aquaLight transition-colors">
                   ☕️ 味わう
                 </button>
               </div>
@@ -838,8 +854,9 @@
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <button onclick="editSpending(${wish.id})" class="text-[10px] bg-aqua/10 text-aqua font-bold px-2 py-1.5 rounded hover:bg-aqua/20 transition-colors">📝 仕上げる</button>
-                <button onclick="deleteWish(${wish.id})" class="text-[10px] text-gray-400 hover:text-red-400 p-2" title="やめる（削除）">✕</button>
+                <!-- ★ 修正：type="button" を追加 -->
+                <button type="button" onclick="editSpending(${wish.id})" class="text-[10px] bg-aqua/10 text-aqua font-bold px-2 py-1.5 rounded active:bg-aqua/20 transition-colors">📝 仕上げる</button>
+                <button type="button" onclick="deleteWish(${wish.id})" class="text-[10px] text-gray-400 active:text-red-400 p-2" title="やめる（削除）">✕</button>
               </div>
             </div>
           `;
