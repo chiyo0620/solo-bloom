@@ -118,7 +118,7 @@
             <button onclick="setFilter('💎')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">💎 石拾い</button>
             <button onclick="setFilter('♨️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">♨️ 温泉</button>
             <button onclick="setFilter('💆‍♀️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">💆‍♀️ スパ</button>
-            <button onclick="setFilter('🍽️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🍽️ 食</button>
+            <button onclick="setFilter('🍽️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🍽️ 食事</button>
             <button onclick="setFilter('🌿')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🌿 植物</button>
           </div>
           <div class="flex justify-between items-center border-t border-gray-100 pt-2">
@@ -202,9 +202,10 @@
             </div>
 
             <div>
+              <!-- ★ iPhone対策：画像形式（JPEG等）への自動変換を促す accept 設定を追加 -->
               <label class="block w-full bg-gray-50 border border-gray-200 border-dashed rounded-lg px-3 py-3 text-sm cursor-pointer hover:bg-aqua/5 transition-colors flex items-center justify-center text-gray-500">
                 <span id="file-name-display" class="truncate font-bold">📷 写真を添付する (任意)</span>
-                <input type="file" id="expense-image" accept="image/*" class="hidden" onchange="document.getElementById('file-name-display').textContent = this.files[0] ? this.files[0].name : '📷 写真を添付する (任意)'">
+                <input type="file" id="expense-image" accept="image/jpeg, image/png, image/webp, image/*" class="hidden" onchange="document.getElementById('file-name-display').textContent = this.files[0] ? this.files[0].name : '📷 写真を添付する (任意)'">
               </label>
             </div>
 
@@ -229,6 +230,7 @@
         </div>
 
         <h3 class="font-bold text-lg mb-4 text-gray-800">マイ・コレクション</h3>
+        
         <div class="grid grid-cols-2 gap-3" id="stock-gallery"></div>
       </div>
     </main>
@@ -249,7 +251,7 @@
       </button>
     </nav>
 
-    <!-- 各種モーダル -->
+    <!-- モーダル（設定） -->
     <div id="settings-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -276,6 +278,7 @@
       </div>
     </div>
 
+    <!-- モーダル（ウィッシュ追加） -->
     <div id="wish-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -297,7 +300,6 @@
             </div>
             <div class="w-24">
               <label class="block text-[11px] font-bold text-gray-600 mb-1">予定月</label>
-              <!-- ★過去の月はスクリプト側で動的に生成・制御します -->
               <select id="wish-month" class="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:border-aqua text-center"></select>
             </div>
           </div>
@@ -342,7 +344,7 @@
     // --- 状態管理 ---
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth() + 1; // 今月 (例: 10月)
+    const currentMonth = currentDate.getMonth() + 1; 
 
     let currentAnnualBudget = 1560000; 
     let expenses = []; 
@@ -350,15 +352,7 @@
     let showUnassignedOnly = false;
     let currentSortOrder = 'newest';
     let executingWishId = null; 
-
-    // サンプルデータは過去月を避けて配置
-    let wishes = [
-      { id: 1, title: '錦石拾いの旅', cost: 85000, icon: '🚄', month: currentMonth.toString() },
-      { id: 2, title: '極上ヘッドスパ（ご褒美）', cost: 18000, icon: '💆‍♀️', month: currentMonth <= 11 ? (currentMonth + 1).toString() : '' },
-      { id: 3, title: 'サヌカイトと温泉旅', cost: 65000, icon: '♨️', month: currentMonth <= 10 ? (currentMonth + 2).toString() : '' },
-      { id: 4, title: '北海道・ペリドット採取', cost: 150000, icon: '💎', month: '' },
-      { id: 5, title: 'ガーデン用オリーブ新調', cost: 12000, icon: '🌿', month: '' }
-    ];
+    let wishes = [];
 
     // ==========================================
     // ☁️ 2. Supabase 連携
@@ -454,6 +448,7 @@
       document.getElementById('expense-cost').value = '';
     }
 
+    // ★ 修正：画像保存時の処理を強化
     async function saveExpense() {
       const icon = document.getElementById('expense-icon').value;
       const title = document.getElementById('expense-title').value.trim();
@@ -469,16 +464,39 @@
       btn.disabled = true;
 
       let imageUrl = null;
+      
+      // ★ iPhone対策：画像アップロードの確実性を向上
       if (supabaseClient && imageFile) {
         try {
-          const fileExt = imageFile.name.split('.').pop();
+          const fileExt = imageFile.name.split('.').pop().toLowerCase();
           const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-          const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('solo-bloom-images').upload(fileName, imageFile);
+          
+          // iPhoneなどからのアップロード時に確実に画像として認識させる
+          const contentType = imageFile.type || (fileExt === 'png' ? 'image/png' : 'image/jpeg');
+
+          const { data: uploadData, error: uploadError } = await supabaseClient.storage
+            .from('solo-bloom-images')
+            .upload(fileName, imageFile, {
+              contentType: contentType,
+              upsert: false
+            });
+
           if (!uploadError) {
             const { data: publicUrlData } = supabaseClient.storage.from('solo-bloom-images').getPublicUrl(fileName);
             imageUrl = publicUrlData.publicUrl;
+          } else {
+            // エラー時はアラートを出して処理を止める
+            alert('画像のアップロードに失敗しました。容量が大きいか、通信が不安定な可能性があります。\n詳細: ' + uploadError.message);
+            btn.innerHTML = originalBtnText;
+            btn.disabled = false;
+            return;
           }
-        } catch (e) {}
+        } catch (e) {
+          alert('画像の処理中にエラーが発生しました。');
+          btn.innerHTML = originalBtnText;
+          btn.disabled = false;
+          return;
+        }
       }
 
       const newExpense = { id: Date.now(), icon, title, cost, stars, image_url: imageUrl, date: new Date().toISOString() };
@@ -559,7 +577,6 @@
     function toggleUnassigned() { showUnassignedOnly = document.getElementById('filter-unassigned').checked; renderWishes(); }
     function changeSort(order) { currentSortOrder = order; renderWishes(); }
 
-    // ★ 改修：オーバーフローはアクティブな月（今月以降）にのみ流れる
     function renderCylinders() {
       const monthlyBudget = currentAnnualBudget / 12; 
       let finalWater = Array(12).fill(0);
@@ -567,24 +584,20 @@
       let overflowPool = 0; 
       let activeAnnualCost = 0;
 
-      // 1. 各月の直接割り当て額を計算し、あふれた分をプールに溜める
       for (let i = 1; i <= 12; i++) {
         let monthCost = wishes.filter(w => parseInt(w.month) === i).reduce((sum, w) => sum + w.cost, 0);
         
-        // 実行中のものは「今月」として計算に含める
         if (i === currentMonth) {
           const spendingCost = wishes.filter(w => w.month === 'spending').reduce((sum, w) => sum + w.cost, 0);
           monthCost += spendingCost;
         }
 
-        const isPast = i < currentMonth; // 過去月かどうか
+        const isPast = i < currentMonth; 
         
         if (isPast) {
-          // 過去月は予算消化0、容量0としてロックする
           directCosts[i-1] = 0;
           finalWater[i-1] = 0;
         } else {
-          // 現在・未来の月
           directCosts[i-1] = monthCost;
           activeAnnualCost += monthCost;
 
@@ -597,7 +610,6 @@
         }
       }
 
-      // 2. プールに溜まった水を「空きのあるアクティブな月」に均等に配分
       let capacities = finalWater.map((w, index) => {
         const isPast = (index + 1) < currentMonth;
         return { index: index, cap: isPast ? 0 : Math.max(0, monthlyBudget - w) };
@@ -606,7 +618,7 @@
       let iterations = 0;
       while (overflowPool > 0.1 && iterations < 20) {
         let availableMonths = capacities.filter(m => m.cap > 0.1);
-        if (availableMonths.length === 0) break; // 全ての月が満杯になればループを抜ける
+        if (availableMonths.length === 0) break; 
         
         let share = overflowPool / availableMonths.length;
         overflowPool = 0; 
@@ -624,7 +636,6 @@
         iterations++;
       }
 
-      // 3. それでもあふれている水（全局面で100%超え）は、アクティブな月全体で均等に負担して水位を上げる
       if (overflowPool > 0.1) {
         const activeIndices = [];
         for (let i = currentMonth; i <= 12; i++) activeIndices.push(i - 1);
@@ -634,7 +645,6 @@
         }
       }
 
-      // UI生成
       const cylinderContainer = document.getElementById('cylinder-container');
       let cylindersHTML = '';
       for (let i = 0; i < 12; i++) {
@@ -642,19 +652,16 @@
         const isPast = monthNum < currentMonth;
 
         if (isPast) {
-          // ★ 過去のシリンダー（グレーアウト・フタ付き）
           cylindersHTML += `
             <div class="flex flex-col items-center z-10 w-full px-1 locked-cylinder">
               <div class="relative w-6 h-20 bg-gray-200/50 rounded-t-sm rounded-b-xl overflow-hidden shadow-inner border border-gray-200 pointer-events-none opacity-60">
-                <!-- 過去の証としてフタのライン -->
                 <div class="absolute top-0 w-full h-1 bg-gray-300"></div>
               </div>
               <span class="text-[9px] mt-1 font-bold text-gray-300 pointer-events-none">終了</span>
             </div>
           `;
         } else {
-          // アクティブなシリンダー
-          const waterPercent = Math.min(100, (finalWater[i] / monthlyBudget) * 100); // UIは最大100%表示
+          const waterPercent = Math.min(100, (finalWater[i] / monthlyBudget) * 100);
           const directCost = directCosts[i];
           let costLabel = '';
           if (directCost > 0) {
@@ -677,7 +684,6 @@
       cylinderContainer.innerHTML = '<div class="absolute bottom-6 left-4 right-4 h-2 bg-aquaLight/40 rounded-full pointer-events-none"></div>' + 
                                     '<div class="flex justify-between w-full z-10 px-1">' + cylindersHTML + '</div>';
 
-      // ★ 今年の調和の正しい判定（残りの月数分の予算）
       const harmonyStatus = document.getElementById('annual-harmony-status');
       const activeMonthsCount = 12 - currentMonth + 1;
       const activeBudget = monthlyBudget * activeMonthsCount;
@@ -690,14 +696,12 @@
       }
     }
 
-    // ドロップダウンの選択肢生成（過去月を除外）
     function generateMonthOptions(selectedMonth) {
       let options = `<option value="">未定</option>`;
       for(let m = currentMonth; m <= 12; m++) {
         const isSelected = selectedMonth == m ? 'selected' : '';
         options += `<option value="${m}" ${isSelected}>${m}月</option>`;
       }
-      // もし現在選択されているのが過去月なら（バグ防止）、それも表示だけはしておく
       if (selectedMonth && parseInt(selectedMonth) < currentMonth) {
         options += `<option value="${selectedMonth}" selected>${selectedMonth}月 (終了)</option>`;
       }
@@ -708,7 +712,6 @@
       const listContainer = document.getElementById('wish-list');
       listContainer.innerHTML = ''; 
 
-      // ウィッシュ追加モーダルのドロップダウンも更新
       document.getElementById('wish-month').innerHTML = generateMonthOptions('');
 
       let displayWishes = wishes.filter(w => {
@@ -928,7 +931,6 @@
       const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
       if (dropTarget) {
         const cylinder = dropTarget.closest('.cylinder-dropzone');
-        // ★過去のロックされたシリンダーはハイライトしない
         if (cylinder && !cylinder.classList.contains('locked-cylinder')) {
           cylinder.classList.add('bg-aqua/20', 'scale-110');
         }
