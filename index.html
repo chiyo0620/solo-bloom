@@ -100,7 +100,7 @@
             <h2 class="font-bold text-lg">12連アクア・シリンダー</h2>
             <span id="annual-harmony-status" class="text-[10px] font-bold"></span>
           </div>
-          <p class="text-[10px] text-gray-500 mb-3 leading-tight">カードの左側を指で押さえて、上のシリンダーへ引っ張って（ドラッグ）水を満たしましょう。</p>
+          <p class="text-[10px] text-gray-500 mb-3 leading-tight">カードの左側を指で押さえて、上のシリンダーへ引っ張って（ドラッグ）水を満たしましょう。過去の月はフタがされています。</p>
           <div class="overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2 relative z-0">
             <div class="flex items-end h-36 bg-white p-3 rounded-xl shadow-inner relative min-w-[640px]" id="cylinder-container"></div>
           </div>
@@ -113,13 +113,13 @@
 
         <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-4 space-y-3">
           <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1" id="category-filters">
+            <!-- ★ フィルターのカテゴリー変更 -->
             <button onclick="setFilter('All')" class="filter-btn active shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-aqua text-white transition-colors">すべて</button>
-            <button onclick="setFilter('🚄')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🚄 鉄道</button>
-            <button onclick="setFilter('💎')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">💎 石拾い</button>
-            <button onclick="setFilter('♨️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">♨️ 温泉</button>
-            <button onclick="setFilter('💆‍♀️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">💆‍♀️ スパ</button>
-            <button onclick="setFilter('🍽️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🍽️ 食事</button>
-            <button onclick="setFilter('🌿')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🌿 植物</button>
+            <button onclick="setFilter('💄')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">💄 ビューティー</button>
+            <button onclick="setFilter('☕️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">☕️ セルフケア</button>
+            <button onclick="setFilter('🛍️')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🛍️ ショッピング</button>
+            <button onclick="setFilter('🚄')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">🚄 旅</button>
+            <button onclick="setFilter('💎')" class="filter-btn shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-500 hover:bg-gray-200">💎 石ひろい</button>
           </div>
           <div class="flex justify-between items-center border-t border-gray-100 pt-2">
             <label class="flex items-center gap-2 cursor-pointer">
@@ -181,10 +181,13 @@
             </button>
 
             <div class="flex gap-2 pt-2">
+              <!-- ★ Spendタブのアイコン変更 -->
               <select id="expense-icon" class="w-16 bg-gray-50 border border-gray-200 rounded-lg px-2 py-2.5 text-base focus:outline-none focus:border-aqua text-center">
-                <option value="🍽️">🍽️</option><option value="🚄">🚄</option><option value="💎">💎</option>
-                <option value="♨️">♨️</option><option value="💆‍♀️">💆‍♀️</option><option value="🌿">🌿</option>
+                <option value="💄">💄</option>
+                <option value="☕️">☕️</option>
                 <option value="🛍️">🛍️</option>
+                <option value="🚄">🚄</option>
+                <option value="💎">💎</option>
               </select>
               <input type="text" id="expense-title" placeholder="体験メモ (例: 極上スパ)" class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-aqua focus:bg-white transition-colors">
             </div>
@@ -249,7 +252,7 @@
       </button>
     </nav>
 
-    <!-- モーダル（設定） -->
+    <!-- 各種モーダル -->
     <div id="settings-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -286,7 +289,7 @@
         <div class="space-y-4">
           <div>
             <label class="block text-[11px] font-bold text-gray-600 mb-1">体験・アイテム名</label>
-            <input type="text" id="wish-title" placeholder="例：青森・錦石拾いの旅" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-aqua">
+            <input type="text" id="wish-title" placeholder="例：青森・錦石ひろいの旅" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-aqua">
           </div>
           <div class="flex gap-2">
             <div class="flex-1">
@@ -303,14 +306,13 @@
           </div>
           <div>
             <label class="block text-[11px] font-bold text-gray-600 mb-1">アイコン</label>
+            <!-- ★ モーダルのアイコン変更 -->
             <select id="wish-icon" class="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:border-aqua">
-              <option value="🚄">🚄 鉄道旅・新幹線</option>
-              <option value="💎">💎 石拾い・鉱物</option>
-              <option value="♨️">♨️ 温泉・宿泊</option>
-              <option value="💆‍♀️">💆‍♀️ スパ・エステ</option>
-              <option value="🍽️">🍽️ 美味しいもの</option>
-              <option value="🌿">🌿 植物・ガーデニング</option>
-              <option value="🛍️">🛍️ その他・お買い物</option>
+              <option value="💄">💄 ビューティー</option>
+              <option value="☕️">☕️ セルフケア</option>
+              <option value="🛍️">🛍️ ショッピング</option>
+              <option value="🚄">🚄 旅</option>
+              <option value="💎">💎 石ひろい</option>
             </select>
           </div>
         </div>
@@ -350,7 +352,13 @@
     let showUnassignedOnly = false;
     let currentSortOrder = 'newest';
     let executingWishId = null; 
-    let wishes = [];
+    
+    // ★ プレースホルダーのアイコンも更新
+    let wishes = [
+      { id: 1, title: '青森・錦石ひろいの旅', cost: 85000, icon: '🚄', month: currentMonth.toString() },
+      { id: 2, title: '極上ヘッドスパ', cost: 18000, icon: '💄', month: currentMonth <= 11 ? (currentMonth + 1).toString() : '' },
+      { id: 3, title: 'おうちでゆっくりティータイム', cost: 3000, icon: '☕️', month: currentMonth <= 10 ? (currentMonth + 2).toString() : '' }
+    ];
 
     // ==========================================
     // ☁️ 2. Supabase 連携
@@ -364,7 +372,7 @@
           supabaseClient.from('expenses').select('*').order('date', { ascending: false })
         ]);
         if (budgetRes?.data?.value) currentAnnualBudget = parseInt(budgetRes.data.value);
-        if (wishesRes?.data) wishes = wishesRes.data;
+        if (wishesRes?.data && wishesRes.data.length > 0) wishes = wishesRes.data;
         if (expensesRes?.data) expenses = expensesRes.data;
         updateUI();
       } catch (err) {}
@@ -446,7 +454,6 @@
       document.getElementById('expense-cost').value = '';
     }
 
-    // ★ 新設：画像をブラウザ内でリサイズ・圧縮する処理（軽量化）
     function compressImage(file, maxWidth, maxHeight, quality) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -490,7 +497,6 @@
       });
     }
 
-    // ★ 修正：画像圧縮処理を組み込んだ保存関数
     async function saveExpense() {
       const icon = document.getElementById('expense-icon').value;
       const title = document.getElementById('expense-title').value.trim();
@@ -507,17 +513,12 @@
 
       let imageUrl = null;
       
-      // 画像が選択されていれば、圧縮してアップロード
       if (supabaseClient && imageFile) {
         try {
-          // 最大1200px、画質70%の軽量JPEGに自動変換
           const compressedBlob = await compressImage(imageFile, 1200, 1200, 0.7);
-          
-          btn.innerHTML = '送信中...'; // 圧縮が終わったら送信ステータスに
-          
+          btn.innerHTML = '送信中...'; 
           const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
           
-          // Blob（圧縮データ）をアップロード
           const { data: uploadData, error: uploadError } = await supabaseClient.storage
             .from('solo-bloom-images')
             .upload(fileName, compressedBlob, {
