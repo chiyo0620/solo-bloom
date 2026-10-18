@@ -209,7 +209,6 @@
               </label>
             </div>
 
-            <!-- スマホ用に type="button" と active:bg-aquaLight に変更 -->
             <button type="button" onclick="saveExpense()" class="w-full bg-aqua text-white mt-1 py-3 rounded-lg text-sm font-bold shadow active:bg-aquaLight transition-colors flex items-center justify-center gap-2" id="save-expense-btn">
               <span>豊かな余韻（Stock）へ送る</span>
             </button>
@@ -251,7 +250,7 @@
       </button>
     </nav>
 
-    <!-- モーダル（設定） -->
+    <!-- 各種モーダル -->
     <div id="settings-modal" class="hidden absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
       <div class="bg-ivory w-full max-w-sm rounded-2xl p-6 shadow-2xl border border-gray-200">
         <div class="flex justify-between items-center mb-4">
@@ -350,14 +349,7 @@
     let showUnassignedOnly = false;
     let currentSortOrder = 'newest';
     let executingWishId = null; 
-    
-    let wishes = [
-      { id: 1, title: '糸魚川・翡翠探しの旅', cost: 45000, icon: '💎', month: currentMonth.toString() },
-      { id: 2, title: '極上ヘッドスパ', cost: 18000, icon: '🌿', month: currentMonth <= 11 ? (currentMonth + 1).toString() : '' },
-      { id: 3, title: '柔術の新しい道着', cost: 18000, icon: '🛍️', month: currentMonth <= 10 ? (currentMonth + 2).toString() : '' },
-      { id: 4, title: '讃岐サヌカイトと温泉旅', cost: 65000, icon: '🧭', month: '' },
-      { id: 5, title: 'パーソナルジム回数券', cost: 40000, icon: '🧘', month: '' }
-    ];
+    let wishes = [];
 
     // ==========================================
     // ☁️ 2. Supabase 連携
@@ -420,21 +412,14 @@
       }
     }
 
-    // ★ 修正：iOSで処理が止まらないように、タブを移動してから非同期でUIを更新する
     function markAsSpending(id) {
       const wish = wishes.find(w => w.id === id);
       if (wish) {
         wish.month = 'spending'; 
-        
-        // 1. 先にタブを切り替える（iOSのイベントキャンセル回避）
         switchTab('spend'); 
-        
-        // 2. わずかに遅延させて画面を書き換える
         setTimeout(() => {
           updateUI();
         }, 50);
-
-        // 3. 裏でSupabaseへ保存
         if (supabaseClient) {
           supabaseClient.from('wishes').update({ month: 'spending' }).eq('id', id).then();
         }
@@ -505,7 +490,6 @@
       });
     }
 
-    // ★ 修正：Stockへの送信時もiOSのフリーズ回避処理を適用
     async function saveExpense() {
       const icon = document.getElementById('expense-icon').value;
       const title = document.getElementById('expense-title').value.trim();
@@ -574,7 +558,6 @@
       btn.innerHTML = originalBtnText;
       btn.disabled = false;
       
-      // ★ 修正：タブ移動を先に行い、画面の更新を遅延させる
       switchTab('stock');
       setTimeout(() => {
         updateUI();
@@ -646,6 +629,10 @@
       for (let i = 1; i <= 12; i++) {
         let monthCost = wishes.filter(w => parseInt(w.month) === i).reduce((sum, w) => sum + w.cost, 0);
         
+        // ★ 修正：Stock（豊かな余韻）に送られた体験の金額もシリンダーの水として加算する
+        const spentCost = expenses.filter(exp => new Date(exp.date).getMonth() + 1 === i).reduce((sum, exp) => sum + exp.cost, 0);
+        monthCost += spentCost;
+
         if (i === currentMonth) {
           const spendingCost = wishes.filter(w => w.month === 'spending').reduce((sum, w) => sum + w.cost, 0);
           monthCost += spendingCost;
@@ -809,7 +796,6 @@
                 <select onchange="updateWishMonth(${wish.id}, this.value)" class="text-[10px] font-bold ${monthBg} border rounded px-1 py-0.5 focus:outline-none cursor-pointer transition-colors">
                   ${generateMonthOptions(wish.month)}
                 </select>
-                <!-- ★ 修正：iOS特有のホバー（ダブルタップ）バグを防ぐため type="button" と active:bg-aquaLight を指定 -->
                 <button type="button" onclick="markAsSpending(${wish.id})" class="text-[10px] font-bold bg-aqua text-white px-3 py-1 rounded shadow-sm active:bg-aquaLight transition-colors">
                   ☕️ 味わう
                 </button>
@@ -854,7 +840,6 @@
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <!-- ★ 修正：type="button" を追加 -->
                 <button type="button" onclick="editSpending(${wish.id})" class="text-[10px] bg-aqua/10 text-aqua font-bold px-2 py-1.5 rounded active:bg-aqua/20 transition-colors">📝 仕上げる</button>
                 <button type="button" onclick="deleteWish(${wish.id})" class="text-[10px] text-gray-400 active:text-red-400 p-2" title="やめる（削除）">✕</button>
               </div>
