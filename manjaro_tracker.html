@@ -219,7 +219,7 @@
             <button class="dose-btn" id="btnDose50" onclick="setDose('5.0')">5.0mg</button>
           </div>
         </div>
-        <button class="inbody-btn" onclick="openInbodyModal()">+ 📊 InBody 記録</button>
+        <button class="inbody-btn" onclick="openInbodyModal()">+ ⚖️ タニタ記録</button>
       </div>
       
       <div class="swipe-dots"><div class="dot active"></div><div class="dot"></div></div>
@@ -264,17 +264,17 @@
     </div>
   </div>
 
-  <!-- InBody入力モーダル -->
+  <!-- タニタ体組成計 入力モーダル -->
 <div class="modal-overlay" id="inbodyModal">
   <div class="modal-content">
-    <div class="modal-title">InBody 数値更新</div>
+    <div class="modal-title">タニタ体組成 計測更新</div>
     <div class="input-group">
-      <label>体脂肪量 (kg)</label>
-      <input type="number" id="inputFat" step="0.1" inputmode="decimal">
+      <label>体脂肪率 (%)</label>
+      <input type="number" id="inputFatPercent" step="0.1" inputmode="decimal" placeholder="例: 32.5">
     </div>
     <div class="input-group">
-      <label>骨格筋量 (kg)</label>
-      <input type="number" id="inputMuscle" step="0.1" inputmode="decimal">
+      <label>筋肉量 (kg)</label>
+      <input type="number" id="inputMuscle" step="0.1" inputmode="decimal" placeholder="例: 44.0">
     </div>
     <div class="modal-btns">
       <button class="modal-btn btn-cancel" onclick="closeInbodyModal()">キャンセル</button>
@@ -315,7 +315,13 @@
     return `${md} (${days[d.getDay()]})`;
   }
 
-  let systemTodayStr = new Date().toISOString().split('T')[0];
+  function getLocalDateStr(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  let systemTodayStr = getLocalDateStr();
   let editingDateStr = systemTodayStr; // 編集中の日付 (タイムトラベル用)
   let isLandscape = false;
 
@@ -452,15 +458,24 @@
   // ---------------------------------------------------
   function openInbodyModal() {
     let d = appData.records[editingDateStr];
-    document.getElementById('inputFat').value = d.fat || '';
+    document.getElementById('inputFatPercent').value = d.fatp || (d.fat && d.w ? Math.round((d.fat / d.w * 100)*10)/10 : '');
     document.getElementById('inputMuscle').value = d.mus || '';
     document.getElementById('inbodyModal').style.display = 'flex';
   }
   function closeInbodyModal() { document.getElementById('inbodyModal').style.display = 'none'; }
   function saveInbody() {
     let d = appData.records[editingDateStr];
-    d.fat = parseFloat(document.getElementById('inputFat').value) || null;
-    d.mus = parseFloat(document.getElementById('inputMuscle').value) || null;
+    let fatp = parseFloat(document.getElementById('inputFatPercent').value);
+    let mus = parseFloat(document.getElementById('inputMuscle').value);
+    
+    d.fatp = !isNaN(fatp) ? fatp : null;
+    d.mus = !isNaN(mus) ? mus : null;
+    // 体重と体脂肪率から「体脂肪量(kg)」を自動計算
+    if (d.fatp && d.w) {
+      d.fat = Math.round((d.w * (d.fatp / 100)) * 10) / 10;
+    } else {
+      d.fat = null;
+    }
     saveData();
     closeInbodyModal();
     renderUI();
@@ -509,11 +524,11 @@
   function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
   function exportCSV() {
-    let csv = "日付,体重,朝ジム,メディカル,生理日,FootFit,用量,体脂肪,骨格筋\n";
+    let csv = "日付,体重,朝ジム,メディカル,生理日,FootFit,用量,体脂肪率,体脂肪量,筋肉量\n";
     let dates = Object.keys(appData.records).sort();
     dates.forEach(dt => {
       let r = appData.records[dt];
-      csv += `${dt},${r.w},${r.gym?1:0},${r.med?1:0},${r.period?1:0},${r.footfit?1:0},${r.dose||''},${r.fat||''},${r.mus||''}\n`;
+      csv += `${dt},${r.w},${r.gym?1:0},${r.med?1:0},${r.period?1:0},${r.footfit?1:0},${r.dose||''},${r.fatp||''},${r.fat||''},${r.mus||''}\n`;
     });
     
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], {type: 'text/csv;charset=utf-8;'});
