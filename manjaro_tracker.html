@@ -219,7 +219,7 @@
             <button class="dose-btn" id="btnDose50" onclick="setDose('5.0')">5.0mg</button>
           </div>
         </div>
-        <button class="inbody-btn" onclick="openInbodyModal()">+ ⚖️ タニタ記録</button>
+        <button class="inbody-btn" onclick="openInbodyModal()">+ 📊 InBody 記録</button>
       </div>
       
       <div class="swipe-dots"><div class="dot active"></div><div class="dot"></div></div>
@@ -234,7 +234,17 @@
         <div class="phase-target">現在 <span id="targetCurrentWeight">--</span>kg ➔ 目標 67.5kg</div>
       </div>
       
-
+      <div class="dual-tracker">
+        <div class="tracker-label">
+          <span>📉 減量内訳（前回測定比）</span>
+          <span id="trackerDetail">記録なし</span>
+        </div>
+        <div class="bar-container">
+          <div class="bar-fat" id="barFat" style="width: 50%;">脂肪</div>
+          <div class="bar-muscle" id="barMuscle" style="width: 50%;">筋肉</div>
+        </div>
+        <div class="tracker-alert" id="muscleAlert">🚨 筋肉減少ペーストオーバー: 下肢負荷を維持！</div>
+      </div>
       
       <div class="chart-container">
         <canvas id="weightChart"></canvas>
@@ -254,17 +264,17 @@
     </div>
   </div>
 
-  <!-- タニタ体組成計 入力モーダル -->
+  <!-- InBody入力モーダル -->
 <div class="modal-overlay" id="inbodyModal">
   <div class="modal-content">
-    <div class="modal-title">タニタ体組成 計測更新</div>
+    <div class="modal-title">InBody 数値更新</div>
     <div class="input-group">
-      <label>体脂肪率 (%)</label>
-      <input type="number" id="inputFatPercent" step="0.1" inputmode="decimal" placeholder="例: 32.5">
+      <label>体脂肪量 (kg)</label>
+      <input type="number" id="inputFat" step="0.1" inputmode="decimal">
     </div>
     <div class="input-group">
-      <label>筋肉量 (kg)</label>
-      <input type="number" id="inputMuscle" step="0.1" inputmode="decimal" placeholder="例: 44.0">
+      <label>骨格筋量 (kg)</label>
+      <input type="number" id="inputMuscle" step="0.1" inputmode="decimal">
     </div>
     <div class="modal-btns">
       <button class="modal-btn btn-cancel" onclick="closeInbodyModal()">キャンセル</button>
@@ -377,7 +387,7 @@
     document.getElementById('btnDose25').classList.toggle('selected', d.dose === '2.5');
     document.getElementById('btnDose50').classList.toggle('selected', d.dose === '5.0');
     
-    
+    updateDualTracker();
     updateChart();
       }
 
@@ -442,24 +452,15 @@
   // ---------------------------------------------------
   function openInbodyModal() {
     let d = appData.records[editingDateStr];
-    document.getElementById('inputFatPercent').value = d.fatp || (d.fat && d.w ? Math.round((d.fat / d.w * 100)*10)/10 : '');
+    document.getElementById('inputFat').value = d.fat || '';
     document.getElementById('inputMuscle').value = d.mus || '';
     document.getElementById('inbodyModal').style.display = 'flex';
   }
   function closeInbodyModal() { document.getElementById('inbodyModal').style.display = 'none'; }
   function saveInbody() {
     let d = appData.records[editingDateStr];
-    let fatp = parseFloat(document.getElementById('inputFatPercent').value);
-    let mus = parseFloat(document.getElementById('inputMuscle').value);
-    
-    d.fatp = !isNaN(fatp) ? fatp : null;
-    d.mus = !isNaN(mus) ? mus : null;
-    // 体重と体脂肪率から「体脂肪量(kg)」を自動計算
-    if (d.fatp && d.w) {
-      d.fat = Math.round((d.w * (d.fatp / 100)) * 10) / 10;
-    } else {
-      d.fat = null;
-    }
+    d.fat = parseFloat(document.getElementById('inputFat').value) || null;
+    d.mus = parseFloat(document.getElementById('inputMuscle').value) || null;
     saveData();
     closeInbodyModal();
     renderUI();
@@ -508,11 +509,11 @@
   function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
   function exportCSV() {
-    let csv = "日付,体重,朝ジム,メディカル,生理日,FootFit,用量,体脂肪率,体脂肪量,筋肉量\n";
+    let csv = "日付,体重,朝ジム,メディカル,生理日,FootFit,用量,体脂肪,骨格筋\n";
     let dates = Object.keys(appData.records).sort();
     dates.forEach(dt => {
       let r = appData.records[dt];
-      csv += `${dt},${r.w},${r.gym?1:0},${r.med?1:0},${r.period?1:0},${r.footfit?1:0},${r.dose||''},${r.fatp||''},${r.fat||''},${r.mus||''}\n`;
+      csv += `${dt},${r.w},${r.gym?1:0},${r.med?1:0},${r.period?1:0},${r.footfit?1:0},${r.dose||''},${r.fat||''},${r.mus||''}\n`;
     });
     
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], {type: 'text/csv;charset=utf-8;'});
@@ -537,7 +538,7 @@
       for(let i=1; i<lines.length; i++){
         if(!lines[i].trim()) continue;
         const cols = lines[i].split(',');
-        if(cols.length < 10) continue;
+        if(cols.length < 9) continue;
         
         let dt = cols[0].trim();
         newRecords[dt] = {
@@ -547,9 +548,8 @@
           period: cols[4].trim() === '1',
           footfit: cols[5].trim() === '1',
           dose: cols[6].trim() || null,
-          fatp: cols[7] && cols[7].trim() ? parseFloat(cols[7]) : null,
-          fat: cols[8] && cols[8].trim() ? parseFloat(cols[8]) : null,
-          mus: cols[9] && cols[9].trim() ? parseFloat(cols[9]) : null
+          fat: cols[7].trim() ? parseFloat(cols[7]) : null,
+          mus: cols[8].trim() ? parseFloat(cols[8]) : null
         };
       }
       appData.records = newRecords;
@@ -575,8 +575,6 @@
     
     let labels = [];
     let weightData = [];
-    let fatpData = [];
-    let musData = [];
     let annotations = {};
     
     // --- 簡易的な目標ライン計算 (Phase 1: 10/9〜10/31 で 70.0kg -> 67.5kg) ---
@@ -590,8 +588,6 @@
       let mdDay = formatDateWithDay(dt); 
       labels.push(mdDay);
       weightData.push(r.w);
-      fatpData.push(r.fatp || null);
-      musData.push(r.mus || null);
       
       // 目標ラインの計算 (日付の差分を正確に計算)
       let currentDate = new Date(dt + 'T00:00:00');
@@ -626,48 +622,24 @@
         labels: labels,
         datasets: [
           {
-            label: '体重 (kg)', data: weightData,
+            label: '実績', data: weightData,
             borderColor: '#007aff', backgroundColor: 'rgba(0, 122, 255, 0.1)',
-            fill: true, tension: 0.4, pointRadius: isLandscape ? 3 : 5, pointBackgroundColor: '#fff', pointBorderWidth: 2,
-            yAxisID: 'y'
-          },
-          {
-            label: '体脂肪率 (%)', data: fatpData,
-            borderColor: '#5ac8fa', backgroundColor: '#5ac8fa',
-            fill: false, tension: 0.4, pointRadius: isLandscape ? 3 : 5,
-            yAxisID: 'y1', spanGaps: true
-          },
-          {
-            label: '筋肉量 (kg)', data: musData,
-            borderColor: '#ff2d55', backgroundColor: '#ff2d55',
-            fill: false, tension: 0.4, pointRadius: isLandscape ? 3 : 5,
-            yAxisID: 'y2', spanGaps: true
+            fill: true, tension: 0.4, pointRadius: isLandscape ? 3 : 5, pointBackgroundColor: '#fff', pointBorderWidth: 2
           },
           {
             label: '目標ライン', data: targetData,
             borderColor: '#ffcc00', borderDash: [5, 5], borderWidth: 2,
-            fill: false, pointRadius: isLandscape ? 3 : 5, pointBackgroundColor: '#ffcc00',
-            yAxisID: 'y'
+            fill: false, pointRadius: isLandscape ? 3 : 5, pointBackgroundColor: '#ffcc00'
           }
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: true, position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: {size: 11, weight: 'bold'} } }, annotation: { annotations: annotations } },
+        plugins: { legend: { display: false }, annotation: { annotations: annotations } },
         scales: {
           y: { 
-            type: 'linear', display: true, position: 'left',
             grid: { color: '#f2f2f7' }, border: { display: false },
-            suggestedMin: 67.0, suggestedMax: 71.0,
-            title: { display: true, text: '体重', color: '#007aff', font: {size: 10} }
-          },
-          y1: {
-            type: 'linear', display: false, position: 'right',
-            suggestedMin: 30.0, suggestedMax: 35.0,
-          },
-          y2: {
-            type: 'linear', display: false, position: 'right',
-            suggestedMin: 40.0, suggestedMax: 48.0,
+            suggestedMin: 67.0, suggestedMax: 71.0
           },
           x: { 
             grid: { display: false }, border: { display: false },
@@ -687,6 +659,21 @@
   mql.addListener(handleOrientationChange);
   // 初期チェック
   isLandscape = mql.matches;
+
+  // --- ホーム画面(PWA)からの復帰時の日付またぎ対策 ---
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      let newToday = getLocalDateStr();
+      if (newToday !== systemTodayStr) {
+        let wasEditingToday = (editingDateStr === systemTodayStr);
+        systemTodayStr = newToday;
+        if (wasEditingToday) {
+          editingDateStr = systemTodayStr;
+        }
+        loadData(); // 日付が変わっていたら最新データとして再読み込み
+      }
+    }
+  });
 
   // スクロール検知によるドット切り替え
   window.addEventListener('DOMContentLoaded', () => {
