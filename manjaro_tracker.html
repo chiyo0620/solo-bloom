@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAELUlEQVR4nO3d0W4TQRBE0TLKV4dnvts8RLJM7Jj11u5M1/Q9jwiJ3umrcZAWc9HnVcBev2YPgGwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQEy8fsAXT98+QXL7+Hz5Gg4FldJv6/8U+P4x4Z3ZQ9q2kfYf89kY2/p4PKZzXhBtrxqG2vovpnxQ/RsIwOaN9N2/OzLOKshgbkPFu3hlLOKukjrE9DQU86LqBDDiXoZHfLOqikG+jL2g3FPV1eQAo85Y0SnysyIGWe9WuhT5QakGJP/KncZwkOSMnnfi/6KbIDUvjpK3/++ICUvIPcyW9WCEiZm0ic+dEiASltH1nTvrBOQMrZSsqcWywVkBJ2U3/Ct6wWkGpvqPJs+ywYkKruqeZUpjUDUr1tVZvnKMsGpEo7qzPJ4VYOSDU2V2GG8ywekGbvb+161CEgzdvi8vWoSUCascsO9ahPQBq70Sb1qFVAGrXXPvWoW0A6f7ut6lHDgHTmjrvVo54B6ZxNN6xHbQPS0fvuWY86B6Tjtt62HjUPSEfsvnM9IiDlfA9GTQQkhXwTT01JAZ365W3v1nBqPUFf6ZcUkMo0RD03YQGpQEPUcy8vIE1tiHq+iQxIkxqinkepAWl4Q9TzVHBAGtgQ9fwkOyANaYh6XogPSAX+XrZbej1aIyBlbiJx5keLBKS0fWRN+8I6ASlnKylzbrFUQErYTf0J37JaQKq9ocqz7bNgQKq6p5pTmdYMSPW2VW2eoywbkCrtrM4kh1s5INXYXIUZzrN4QJq9v7XrUYeANG+Ly9ejJgFpxi471KM+AWnsRpvUo1YBadRe+9SjbgHp/O22qkcNA9KZO+5Wj3oGpHM23bAetQ1IR++7Zz3qHJCO23rbetQ8IB2x+871iIDkFdC8HhHQl30dUI8ICKaP2QNU8XWdbPxXYNw9N9xA/9hSBvXc4wb67sVVRDqPCOg5WtmIjzBYCAgWAoKFgGBJCqjPF3sHPWlSQCiIgGAhIFgICBYCgoWAYBkXEC+Pbhd0VtxAsAwNiLePt0s5q9E3EG8fbxdxVnyEwXLR53XKH8zbx9tVPqtpNxBvH28XcGzmh8QovFDNCwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHBQkCwEBAsBAQLAcFCQLAQECwEBAsBwUJAsBAQLAQECwHB8hdT6tqJNNKOmQAAAABJRU5ErkJggg==">
 <link rel="icon" href="data:;base64,=">
 <title>マンジャロ計画 トラッカー</title>
@@ -688,21 +691,20 @@
   // 初期チェック
   isLandscape = mql.matches;
 
-  // --- ホーム画面(PWA)からの復帰時の日付またぎ対策 ---
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      let newToday = getLocalDateStr();
-      if (newToday !== systemTodayStr) {
-        let wasEditingToday = (editingDateStr === systemTodayStr);
-        systemTodayStr = newToday;
-        if (wasEditingToday) {
-          editingDateStr = systemTodayStr;
-        }
-        loadData(); // 日付が変わっていたら最新データとして再読み込み
+
+  // 画面復帰時の自動日付更新処理 (visibilitychange)
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      let currentActualDate = getLocalDateStr();
+      // もしシステム日付(画面を開いた時の日付)と、現実の今日の日付が変わっていればリロードする
+      if (systemTodayStr !== currentActualDate) {
+        window.location.reload();
       }
     }
   });
+
   // スクロール検知によるドット切り替え
+
   window.addEventListener('DOMContentLoaded', () => {
     loadData();
     const container = document.getElementById('swipeContainer');
