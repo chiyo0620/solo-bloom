@@ -298,9 +298,8 @@
         // ==========================================
         // 1. SUPABASE INITIALIZATION
         // ==========================================
-        // ★ここをご自身のURLとキーに書き換えてください★
-    const SUPABASE_URL = 'https://mlyqkgnpugvplywdxfnx.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seXFrZ25wdWd2cGx5d2R4Zm54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NDg0NjYsImV4cCI6MjEwODMyNDQ2Nn0.0Gt28lq7-DcOgcvNSHzFUxhM24H0EHJz0ff57eXfCg4';
+        const SUPABASE_URL = 'https://mlyqkgnpugvplywdxfnx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1seXFrZ25wdWd2cGx5d2R4Zm54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NDg0NjYsImV4cCI6MjEwODMyNDQ2Nn0.0Gt28lq7-DcOgcvNSHzFUxhM24H0EHJz0ff57eXfCg4';
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -334,18 +333,14 @@
 
             if (error) {
                 console.error("データの取得に失敗しました", error);
-                // エラー時は空配列にしてUIだけ表示する
                 stones = [];
             } else {
-                // Supabaseから取得したデータをUI用に整形
                 stones = data.map(row => {
-                    // image_urlに保存されたJSON文字列を配列に戻す
                     let imagesArr = [];
                     if (row.image_url) {
                         try {
                             imagesArr = JSON.parse(row.image_url);
                         } catch (e) {
-                            // 旧データで単一URLの場合のフォールバック
                             imagesArr = [{ url: row.image_url, type: 'dry' }];
                         }
                     }
@@ -355,7 +350,7 @@
                         name: row.name,
                         category: row.category,
                         location: row.location,
-                        geologicalBand: row.geologicalBand || '', // テーブルにカラムを追加していない場合はdescription等で代用を要検討
+                        geologicalBand: row.geologicalBand || '',
                         era: row.era || '',
                         age: row.age || '',
                         minerals: row.minerals || '',
@@ -707,9 +702,6 @@
                 location: document.getElementById('form-location').value.trim(),
                 description: document.getElementById('form-features').value.trim(),
                 story: document.getElementById('form-story').value.trim(),
-                // カラムにない項目は今回は使用しない、あるいは別の用途で使うかテーブル定義を増やす必要があります
-                // ※以下の項目はデータベースにカラムを追加していない場合、保存時にエラーになる可能性があります。
-                // そのため、今回はJSON化して画像とまとめるか、必要なものだけ送ります。
                 image_url: JSON.stringify(images) // 画像配列をJSONテキストとして保存
             };
 
